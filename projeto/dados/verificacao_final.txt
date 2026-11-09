@@ -1,6 +1,0 @@
-OK: 5172 verificações matemáticas; incluem grades de parâmetros e contagens independentes.
-log10(1000!) = 2567.604644222133
-Bloom: 78586 B, k=7, p aproximado=0.009999688489; 78521 B dariam 0.010039095061.
-Unário, n=10^7: E[V]=1638425163842500000 B.
-Subconjuntos, n=1000: log10(payload B) = 304.0299956639812
-OK: 42 medições, 6 resumos, 808 previsões; quartis, frames, fontes, manifesto gráfico, tabelas e PDF coerentes.

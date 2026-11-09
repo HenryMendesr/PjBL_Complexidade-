@@ -1,2 +1,0 @@
-/tmp/pjbl-benchmark-anterior: retorno=0; linhas de CSV=2
-./projeto/build/benchmark: retorno=1; linhas de CSV=0

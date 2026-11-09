@@ -1,35 +1,24 @@
-# PjBL — Complexidade de Algoritmos
+# PjBL — Deduplicação de leituras de sensores
 
 **Integrantes:** Henry Rodrigues, Rafael Maluf e Matheus.
 
-Trabalho sobre deduplicação de leituras de sensores para Embarca e Datacenter. A prioridade da exposição é a **lógica matemática**: especificação da saída, provas de corretude, somatórios, complexidade de tempo/espaço e limites das hipóteses probabilísticas.
-
-## Leitura recomendada
-
-1. [Fundamentação matemática](projeto/docs/fundamentacao_matematica.md): demonstrações e contagens verificáveis.
-2. [Análise das dez estratégias](projeto/docs/analise_teorica.md): deduções, restrições e comparação dos clientes.
-3. [Relatório completo em PDF](projeto/relatorio.pdf): fundamentação, metodologia, resultados e recomendações.
-4. [Modelos das oito extrapolações](projeto/docs/modelos.md): custos assumidos e leitura dos gráficos.
-5. [Roteiro de apresentação e defesa oral](projeto/docs/apresentacao.md).
-
-A entrega implementa exatamente duas estratégias em C: Heap Sort iterativo in-place e bitmap de 65536 bits. As outras oito são analisadas e modeladas, sem benchmarks fictícios. Python automatiza experimentos, verificações matemáticas e documentos.
-
-## Auditoria
-
-[Resultados da auditoria](projeto/docs/auditoria.md) e [checklist por requisito e rubrica](projeto/docs/checklist.md). As pendências externas permanecem explicitadas; as novas medições substituem os dados correntes, mantendo o histórico anterior.
-
-## Verificação
+Todos os programas estão em **Python**. A pasta `projeto/` contém somente a entrega: duas estratégias, testes, automação, medições, gráficos separados, análise e relatório PDF. O material para estudar e preparar a apresentação está em **Estudos/**.
 
 ```sh
-cd projeto
-make math
-make test
-make sanitize
-make bench
-make docs
-python3 scripts/verificar.py
+python3 projeto/src/main.py heap 3 1 3 0 65535
+python3 projeto/src/main.py bitmap 3 1 3 0 65535
+python3 projeto/tests/test.py
+python3 -m pip install -r projeto/requirements.txt
+python3 projeto/scripts/experimentos.py
+MPLCONFIGDIR=/tmp/pjbl-mpl python3 projeto/scripts/documentos.py
 ```
 
-Consulte [instruções completas](projeto/README.md), [checklist da rubrica](projeto/docs/checklist.md) e [medições reais](projeto/dados/resumo.csv). Dependências Python em projeto/requirements.txt. O ZIP de entrega está na raiz; fontes editáveis, gráficos e evidências estão em projeto/.
+Os experimentos executam n=1000,100000,10000000 com um aquecimento e três repetições por algoritmo. Heap Sort em Python pode demorar vários minutos no maior tamanho. A geração, cópia e validação ficam fora do tempo. Nova coleta substitui os dados correntes; os resultados presentes são reais desta versão Python.
 
-**Pendências externas:** aprovação do par pelo professor, confirmação de C diante das menções a Pascal e teste na máquina de referência. Os tempos registrados são locais; não certificam o prazo de dois segundos na máquina da disciplina.
+[Relatório](projeto/relatorio.pdf) · [Análise teórica](projeto/docs/analise_teorica.md) · [Roteiro](Estudos/apresentacao.md)
+
+**Limitações:** a amostra de Heap Sort em CPython apresentou 380 B de alocações rastreadas, acima dos 256 B da Embarca; essa restrição não foi atendida no ensaio. O par e a linguagem precisam ser confirmados com o professor diante das menções a Pascal. Resultados locais não certificam os 2 s na máquina da disciplina. O relatório distingue o que foi efetivamente medido das hipóteses dos modelos.
+
+A entrada das funções é `array('H')`, com 2 B por elemento na máquina avaliada, e é modificada. O retorno u indica o prefixo válido a[0:u]; heap entrega ordem crescente, bitmap mantém primeiras ocorrências. Para vetor vazio, u=0. Apenas os testes usam conjunto e ordenação nativa como referência.
+
+Os cinco gráficos PNG são arquivos individuais de alta resolução. Não há executáveis, arquivos C, histórico de medições antigas ou ZIP duplicado nesta entrega. Para compactar só a entrega: `python3 -m zipfile -c entrega.zip projeto` (remova caches `__pycache__` antes, caso existam).

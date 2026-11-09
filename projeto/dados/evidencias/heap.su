@@ -1,2 +1,0 @@
-src/heap.c:4:13:sift	32	static
-src/heap.c:13:8:heap_unique	48	static

@@ -1,4 +1,4 @@
-n,estrategia,log10_segundos_previstos,log10_ram_extra_bytes_previstos
+n,estrategia,log10_segundos_modelo,log10_ram_bytes_modelo
 1000,Força bruta,-3.304335898196573,2.1072099696478683
 1000,Hash,-5.301029995663981,4.2043009488706655
 1000,Árvore balanceada,-4.30293397128098,4.503591009578286

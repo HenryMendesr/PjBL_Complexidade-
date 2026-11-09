@@ -1,84 +1,100 @@
-#!/usr/bin/env python3
-
-import csv, json, math, re, statistics, hashlib
+import csv
+import json
+import math
+import re
 from pathlib import Path
 from xml.sax.saxutils import escape
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
 import numpy as np
+from modelos import models, names, lg
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, PageBreak, Preformatted, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 R=Path(__file__).resolve().parents[1]
-from modelos import models, names, lg
-rows=list(csv.DictReader((R/'dados/resumo.csv').open()))
+rows=json.loads((R/'dados/resumo.json').read_text())
+env=json.loads((R/'dados/ambiente.json').read_text())
 ns=np.unique(np.rint(np.logspace(3,7,101)).astype(int))
-mt=np.array([models(int(n))[0] for n in ns]);mm=np.array([models(int(n))[1] for n in ns])
-with (R/'dados/previsoes_log10.csv').open('w') as f:
-    w=csv.writer(f,lineterminator="\n");w.writerow(['n','estrategia','log10_segundos_previstos','log10_ram_extra_bytes_previstos'])
+mt=np.array([models(int(n))[0] for n in ns])
+mm=np.array([models(int(n))[1] for n in ns])
+with (R/'dados/previsoes.csv').open('w') as f:
+    w=csv.writer(f,lineterminator='\n')
+    w.writerow(['n','estrategia','log10_segundos_modelo','log10_ram_bytes_modelo'])
     for i,n in enumerate(ns):
         for j,name in enumerate(names):w.writerow([int(n),name,mt[i,j],mm[i,j]])
-plt.rcParams.update({'font.size':9,'figure.dpi':150})
-styles=['--',':','-.','--',':','-.','--',':'];cols=plt.cm.tab10.colors
-fig,axs=plt.subplots(1,2,figsize=(12,6))
-for j,name in enumerate(names):
-    axs[0].plot(ns,10**np.clip(mt[:,j],-15,8),styles[j],color=cols[j+2 if j<8 else j],label=name+' — previsão')
-    axs[1].plot(ns,mt[:,j],styles[j],color=cols[j+2],label=name)
-for k,alg in enumerate(['heap','bitmap']):
-    rr=[r for r in rows if r['algoritmo']==alg];xx=[int(r['n']) for r in rr];yy=[float(r['mediana_s']) for r in rr]
-    for ax,ys in [(axs[0],yy),(axs[1],[lg(t) for t in yy])]:
-        ax.plot(xx,ys,'o-',color=cols[k],linewidth=2,label=alg+' — medido')
-    axs[0].errorbar(xx,yy,yerr=[[float(r['mediana_s'])-float(r['min_s']) for r in rr],[float(r['max_s'])-float(r['mediana_s']) for r in rr]],fmt='none',color=cols[k])
-axs[0].set(yscale='log',ylim=(1e-8,1e6),ylabel='Tempo (s), escala log',title='Faixa prática; curvas superiores continuam no painel ao lado')
-axs[0].axhline(2,color='black',alpha=.4);axs[0].text(1200,3,'2 s (meta da referência)')
-axs[1].set(yscale='symlog',ylabel='log10(tempo em s), eixo symlog',title='Todas as ordens de grandeza, sem overflow')
-for ax in axs:ax.set_xscale('log');ax.set_xlabel('n (leituras)');ax.grid(True,alpha=.2)
-handles,labels=axs[0].get_legend_handles_labels();fig.legend(handles,labels,loc='lower center',ncol=3,fontsize=8)
-fig.suptitle('Duas medições e oito modelos hipotéticos — constantes em docs/modelos.md')
-fig.tight_layout(rect=(0,.18,1,.94));fig.savefig(R/'graficos/tempo.png');fig.savefig(R/'graficos/tempo.pdf');plt.close(fig)
-fig,axs=plt.subplots(1,2,figsize=(12,5.8))
-for j,name in enumerate(names):axs[0].plot(ns,mm[:,j],styles[j],color=cols[j+2],label=name+' — cálculo')
-for k,alg in enumerate(['heap','bitmap']):
-    rr=[r for r in rows if r['algoritmo']==alg]
-    axs[0].plot([int(r['n']) for r in rr],[lg(float(r['extra_conservador_bytes'])) for r in rr],'o-',color=cols[k],linewidth=2,label=alg+' — GCC + margem')
-axs[0].axhline(lg(256),color='black',alpha=.4,label='256 B')
-axs[0].set(yscale='symlog',ylim=(0,None),ylabel='log10(RAM extra em bytes), eixo symlog',title='RAM: pilha + heap; subconjuntos materializados')
-axs[1].plot(ns,ns*2,label='Vetor de entrada (calculado)')
-axs[1].plot(ns,ns*32768.5,'--',label='Disco unário esperado (calculado)')
-for alg in ['heap','bitmap']:
-    rr=[r for r in rows if r['algoritmo']==alg]
-    axs[1].plot([int(r['n']) for r in rr],[int(r['rss_pico_kib'])*1024 for r in rr],'o-',label='RSS processo '+alg+' (medido)')
-axs[1].set(yscale='log',ylabel='Bytes, escala log',title='Recursos separados: entrada, processo e disco')
-axs[1].legend(fontsize=8)
-for ax in axs:ax.set_xscale('log');ax.set_xlabel('n (leituras)');ax.grid(True,alpha=.2)
-h,l=axs[0].get_legend_handles_labels();fig.legend(h,l,loc='lower center',ncol=3,fontsize=8)
-fig.tight_layout(rect=(0,.21,1,.96));fig.savefig(R/'graficos/memoria.png');fig.savefig(R/'graficos/memoria.pdf');plt.close(fig)
-manifest={
-    'entradas_sha256':{path:hashlib.sha256((R/path).read_bytes()).hexdigest() for path in ['dados/resumo.csv','scripts/modelos.py','scripts/documentos.py']},
-    'saidas_sha256':{path:hashlib.sha256((R/path).read_bytes()).hexdigest() for path in ['graficos/tempo.png','graficos/tempo.pdf','graficos/memoria.png','graficos/memoria.pdf','dados/previsoes_log10.csv']},
-    'pontos_medidos':[{'algoritmo':row['algoritmo'],'n':int(row['n']),'mediana_s':float(row['mediana_s']),'min_s':float(row['min_s']),'max_s':float(row['max_s']),'extra_conservador_bytes':int(row['extra_conservador_bytes']),'rss_pico_kib':int(row['rss_pico_kib'])} for row in rows],
-    'estrategias_extrapoladas':names,'grade_n':[int(n) for n in ns],
-    'painel_completo':'log10 da grandeza sobre eixo symlog; nenhuma curva descartada'}
-(R/'dados/manifesto_graficos.json').write_text(json.dumps(manifest,indent=2,ensure_ascii=False))
+plt.rcParams.update({'font.size':14,'axes.titlesize':19,'axes.labelsize':15,'legend.fontsize':12,'lines.linewidth':2.4,'savefig.dpi':200})
+colorset=plt.cm.tab10.colors
+styles=['--',':','-.','--',':','-.','--',':']
+def new(title,ylabel):
+    fig,ax=plt.subplots(figsize=(15,9))
+    ax.set_title(title,pad=20)
+    ax.set_xscale('log');ax.set_xlabel('Quantidade de leituras (n)');ax.set_ylabel(ylabel)
+    ax.grid(True,which='major',alpha=.28)
+    return fig,ax
 
+def finish(fig,ax,name,note):
+    ax.set_xlim(800,14000000)
+    ax.legend(loc='center left',bbox_to_anchor=(1.02,.5),frameon=False)
+    fig.text(.07,.035,note,fontsize=12)
+    fig.subplots_adjust(left=.09,right=.72,bottom=.13,top=.89)
+    fig.savefig(R/f'graficos/{name}.png',facecolor='white')
+    plt.close(fig)
 
-env=json.loads((R/'dados/ambiente.json').read_text())
-cpu=next((l.split(':',1)[1].strip() for l in env['cpu'].splitlines() if l.startswith('Model name:')),'ver ambiente.json')
-result='## Resultados locais efetivamente medidos\n\n'
-result+='CPU informada ao ambiente: '+cpu+'. Sistema: '+env['plataforma']+'. Compilador: '+env['compilador'].splitlines()[0]+'.\n\n'
-result+='| Algoritmo | n | u | Mediana (s) | Mín–máx (s) | Q1–Q3 (s) | Extra conservador (B) | RSS pico (KiB) |\n|---|---|---|---|---|---|---|---|\n'
-for r in rows:
-    result+=f"| {r['algoritmo']} | {r['n']} | {r['u']} | {float(r['mediana_s']):.9f} | {float(r['min_s']):.9f}–{float(r['max_s']):.9f} | {float(r['q1_s']):.9f}–{float(r['q3_s']):.9f} | {r['extra_conservador_bytes']} | {r['rss_pico_kib']} |\n"
-result+='\nO RSS é o máximo residente de cada processo Linux, inclui dois vetores, oráculo, runtime e páginas tocadas. Não é memória extra do algoritmo e não deve ser subtraído do vetor para inferir a pilha. A inicialização do bitmap está dentro do cronômetro.\n'
-(R/'docs/resultados.md').write_text(result)
-parts=['# PjBL: Duas empresas, duas restrições\n\nDeduplicação de leituras de sensores — relatório técnico.\n\nIntegrantes: Henry Rodrigues, Rafael Maluf e Matheus.\n\n',
-(R/'docs/fundamentacao_matematica.md').read_text(),(R/'docs/analise_teorica.md').read_text(),(R/'docs/metodologia.md').read_text(),result,
-(R/'docs/modelos.md').read_text(),'\n![Tempo](graficos/tempo.png)\n\n![Memória](graficos/memoria.png)\n\n',
-(R/'docs/discussao.md').read_text(),(R/'docs/auditoria.md').read_text(),(R/'docs/checklist.md').read_text(),(R/'docs/apresentacao.md').read_text()]
-source='\n\n'.join(parts);(R/'docs/relatorio.md').write_text(source)
+def measured(ax,expo=False):
+    for k,alg in enumerate(['heap','bitmap']):
+        group=[r for r in rows if r['algoritmo']==alg]
+        x=[r['n'] for r in group];y=[r['mediana_s'] for r in group]
+        ax.plot(x,[lg(t) for t in y] if expo else y,'o-',color=colorset[k],markersize=9,linewidth=3.3,label=alg+' — medido em Python',zorder=5)
+        if not expo:
+            ax.errorbar(x,y,yerr=[[r['mediana_s']-r['min_s'] for r in group],[r['max_s']-r['mediana_s'] for r in group]],fmt='none',capsize=5,color=colorset[k])
+
+fig,ax=new('Tempo real das duas implementações Python','Tempo (segundos)')
+ax.set_yscale('log');measured(ax)
+ax.axhline(2,color='#555555',linewidth=1.4,label='Meta na referência: 2 s')
+finish(fig,ax,'tempo_medido','Pontos: medianas de 3 rodadas; barras: mínimo e máximo. Medições locais.')
+fig,ax=new('Tempo comparativo — faixa prática','Tempo (segundos)')
+ax.set_yscale('log');ax.set_ylim(1e-6,1e6)
+for j,name in enumerate(names):ax.plot(ns,10**np.clip(mt[:,j],-15,8),styles[j],color=colorset[j+2],label=name+' — modelo')
+measured(ax)
+finish(fig,ax,'tempo_comparativo','Modelos: custos nominais de baixo nível, não calibrados para Python. Curvas fora da faixa em tempo_completo.png.')
+fig,ax=new('Tempo comparativo — todas as ordens de grandeza','Expoente E: tempo = 10^E segundos')
+for j,name in enumerate(names):ax.plot(ns,mt[:,j],styles[j],color=colorset[j+2],label=name+' — modelo')
+measured(ax,True);ax.set_yscale('symlog',linthresh=10)
+ax.set_yticks([-6,0,6,100,10000,1000000,100000000],['−6','0','6','100','10 000','1 000 000','100 000 000'])
+finish(fig,ax,'tempo_completo','E é um expoente, não uma duração. Eixo comprimido para manter as oito curvas, inclusive fatoriais e exponenciais.')
+fig,ax=new('Memória auxiliar — modelos e amostra Python','Expoente E: memória = 10^E bytes')
+for j,name in enumerate(names):ax.plot(ns,mm[:,j],styles[j],color=colorset[j+2],label=name+' — modelo compacto')
+for k,alg in enumerate(['heap','bitmap']):
+    m=env['memoria'][alg]
+    ax.scatter([m['n_medido']],[lg(m['pico_alocacoes_rastreadas_bytes'])],s=115,color=colorset[k],label=alg+' — tracemalloc',zorder=5)
+ax.axhline(lg(256),color='#555555',label='Limite Embarca: 256 B')
+ax.set_yscale('symlog',linthresh=10);ax.set_ylim(bottom=0)
+ax.set_yticks([0,2,4,10,1000,1000000],['0','2','4','10','1000','1 000 000'])
+finish(fig,ax,'memoria_algoritmos','Pontos Python medidos somente em n=1000. Modelos compactos não representam objetos do interpretador.')
+fig,ax=new('Entrada, armazenamento em disco e processo','Bytes')
+ax.set_yscale('log')
+ax.plot(ns,ns*2,label='Entrada array: 2n B')
+ax.plot(ns,ns*32768.5,'--',label='Unário: disco esperado')
+ax.scatter([10000000],[env['rss_pico_processo_kib']*1024],s=100,label='RSS máximo da coleta')
+finish(fig,ax,'armazenamento','RSS: processo completo, incluindo infraestrutura. Não é memória extra de uma função.')
+result='# Metodologia e resultados Python\n\n'
+result+='Um aquecimento e três rodadas por combinação. perf_counter_ns mede apenas a chamada ao algoritmo; geração, cópia, validação e impressão ficam fora. Inicializar o bitmap fica dentro. Mesmos dados para ambos: random.Random(20261108).getrandbits(16), reiniciado por escala. Não é geração criptográfica. Validação independente por set, contagem, unicidade e ordem ocorre depois de toda rodada.\n\n'
+result+='Ambiente: '+env['python'].splitlines()[0]+'. '+env['sistema']+'. '+env['cpu_info']+'.\n\n'
+result+='| Algoritmo | n | u | Mediana (s) | Mínimo (s) | Máximo (s) |\n|---|---|---|---|---|---|\n'
+for r in rows:result+=f"| {r['algoritmo']} | {r['n']} | {r['u']} | {r['mediana_s']:.6f} | {r['min_s']:.6f} | {r['max_s']:.6f} |\n"
+result+='\nA memória foi amostrada em rodada separada com tracemalloc, somente para n=1000, com a entrada criada antes do rastreamento e após gc.collect. O pico indica alocações rastreadas; não soma toda a memória interna do interpretador e não prova um limite universal para n. Nenhum tempo foi medido com tracemalloc ativo.\n\n'
+for alg in ['heap','bitmap']:result+=f"- {alg}: pico rastreado em n=1000 de {env['memoria'][alg]['pico_alocacoes_rastreadas_bytes']} B.\n"
+result+=f"\nA amostra de Heap Sort apresentou {env['memoria']['heap']['pico_alocacoes_rastreadas_bytes']} B rastreados: "+('ultrapassa os 256 B, portanto esta implementação não atende ao limite no ensaio.' if env['memoria']['heap']['pico_alocacoes_rastreadas_bytes']>256 else 'a amostra isolada não prova o limite para todos os n.')+' O requisito de 256 B da Embarca não está demonstrado em CPython. Não se reutiliza a prova da versão C nem se desconta a infraestrutura para inventar um limite. Há apenas uma amostra de alocações por função, não um estudo de memória nas três escalas; essa parte permanece parcial. O vetor ocupa 2n B; seu objeto possui cabeçalho e eventual folga que não estão incluídos nesses 2n B calculados. O RSS máximo pertence ao processo inteiro.\n\n'
+big=next(r for r in rows if r['n']==10000000 and r['algoritmo']=='bitmap')
+result+=f"O bitmap levou {big['mediana_s']:.6f} s de mediana local em n=10⁷. "+('A mediana ficou abaixo de 2 s localmente; isso não certifica a máquina da disciplina.' if big['mediana_s']<2 else 'A mediana local excedeu 2 s: o alvo temporal também não foi atingido nesta coleta. Não se substitui a medição por estimativa.')+'\n\n'
+result+='Recomendação: bitmap para Datacenter pelo domínio conhecido e custo linear, sujeito ao hardware da disciplina. Heap Sort demonstra ordenação/compactação sem vetor auxiliar, mas esta versão Python não é certificada para a Embarca. Permanecem necessárias confirmação da linguagem e aprovação do par.\n'
+source=(R/'docs/analise_teorica.md').read_text()+'\n\n'+result
+for name in ['tempo_medido','tempo_comparativo','tempo_completo','memoria_algoritmos','armazenamento']:source+=f'\n\n![{name}](graficos/{name}.png)\n'
+(R/'docs/relatorio.md').write_text(source)
 
 font='/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
 pdfmetrics.registerFont(TTFont('DV',font));pdfmetrics.registerFont(TTFont('DVB',font.replace('.ttf','-Bold.ttf')))
@@ -96,7 +112,7 @@ while i<len(lines):
     line=lines[i]
     if not line.strip():i+=1;continue
     if line.startswith('!['):
-        path=re.search(r'\]\((.+)\)',line).group(1);story.extend([PageBreak(),Image(str(R/path),width=490,height=265),Spacer(1,10)]);i+=1;continue
+        path=re.search(r'\]\((.+)\)',line).group(1);story.extend([PageBreak(),Image(str(R/path),width=490,height=294),Spacer(1,10)]);i+=1;continue
     if line.startswith('```'):
         buf=[];i+=1
         while i<len(lines) and not lines[i].startswith('```'):buf.append(lines[i]);i+=1

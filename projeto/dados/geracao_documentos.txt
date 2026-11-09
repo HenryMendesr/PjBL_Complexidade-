@@ -1,2 +1,0 @@
-MPLCONFIGDIR=/tmp/pjbl-mpl python3 scripts/documentos.py
-Gráficos, modelos em CSV, fonte Markdown e relatório PDF gerados.

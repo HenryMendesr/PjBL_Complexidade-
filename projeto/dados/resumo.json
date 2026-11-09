@@ -1,0 +1,56 @@
+[
+  {
+    "algoritmo": "heap",
+    "n": 1000,
+    "u": 996,
+    "mediana_s": 0.002395203,
+    "min_s": 0.0022921,
+    "max_s": 0.00262238,
+    "entrada_bytes": 2000
+  },
+  {
+    "algoritmo": "bitmap",
+    "n": 1000,
+    "u": 996,
+    "mediana_s": 0.000160769,
+    "min_s": 0.000159056,
+    "max_s": 0.000187518,
+    "entrada_bytes": 2000
+  },
+  {
+    "algoritmo": "heap",
+    "n": 100000,
+    "u": 51281,
+    "mediana_s": 0.458691885,
+    "min_s": 0.44950735,
+    "max_s": 0.466493628,
+    "entrada_bytes": 200000
+  },
+  {
+    "algoritmo": "bitmap",
+    "n": 100000,
+    "u": 51281,
+    "mediana_s": 0.015329611,
+    "min_s": 0.014332772,
+    "max_s": 0.015340867,
+    "entrada_bytes": 200000
+  },
+  {
+    "algoritmo": "heap",
+    "n": 10000000,
+    "u": 65536,
+    "mediana_s": 70.117607581,
+    "min_s": 67.930714046,
+    "max_s": 72.47676382,
+    "entrada_bytes": 20000000
+  },
+  {
+    "algoritmo": "bitmap",
+    "n": 10000000,
+    "u": 65536,
+    "mediana_s": 1.04161097,
+    "min_s": 0.973066785,
+    "max_s": 1.057750567,
+    "entrada_bytes": 20000000
+  }
+]

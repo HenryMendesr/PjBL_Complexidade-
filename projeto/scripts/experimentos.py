@@ -1,56 +1,81 @@
-#!/usr/bin/env python3
-
-import csv, io, json, platform, statistics, subprocess, shutil, hashlib
+import csv
+import gc
+import hashlib
+import json
+import platform
+import random
+import resource
+import statistics
+import sys
+import tracemalloc
+from array import array
 from datetime import datetime, timezone
 from pathlib import Path
-ROOT=Path(__file__).resolve().parents[1]
-def cmd(*a): return subprocess.check_output(a,cwd=ROOT,text=True)
+from time import perf_counter_ns
+R = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(R / 'src'))
+from heap import heap_unique
+from bitmap import bitmap_unique
+
+
+def validate(original, result, u, ordered):
+    expected = set(original)
+    prefix = result[:u]
+    assert u == len(expected) == len(set(prefix)) and set(prefix) == expected
+    if ordered:
+        assert all(prefix[i-1] < prefix[i] for i in range(1,u))
+    else:
+        assert list(prefix) == list(dict.fromkeys(original))
+
+
 def main():
-    rows=[]
-    subprocess.run(['make','all'],cwd=ROOT,check=True)
-    env={'coleta_utc':datetime.now(timezone.utc).isoformat(),
-         'fontes_sha256':{str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted((ROOT/'src').glob('*')) if p.is_file()},
-         'binario_sha256':hashlib.sha256((ROOT/'build/benchmark').read_bytes()).hexdigest(),
-         'plataforma':platform.platform(),'maquina':platform.machine(),
-         'cpu':cmd('lscpu'),'compilador':cmd('gcc','--version'),
-         'flags':next(l for l in (ROOT/'Makefile').read_text().splitlines() if l.startswith('CFLAGS')),
-         'python':platform.python_version(),'repeticoes':7,'aquecimentos':1,
-         'relogio':'CLOCK_MONOTONIC','seed':20261108,
-         'nota':'Ambiente local virtualizado; frequencia e compartilhamento nao controlados.'}
-    (ROOT/'dados/ambiente.json').write_text(json.dumps(env,indent=2,ensure_ascii=False))
+    assert array('H').itemsize == 2
+    env = {'python': sys.version, 'sistema': platform.platform(), 'cpu': platform.processor(),
+           'coleta_utc': datetime.now(timezone.utc).isoformat(), 'seed': 20261108,
+           'gerador': 'random.Random(seed).getrandbits(16)', 'repeticoes': 3, 'aquecimentos': 1,
+           'cpu_info': next((line.strip() for line in Path('/proc/cpuinfo').read_text().splitlines() if line.startswith('model name')), ''),
+           'fontes_sha256': {p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in (R/'src').glob('*.py')}}
+    rows = []
+    memory = {}
     for n in [1000,100000,10000000]:
-        for alg in ['heap','bitmap']:
-            result=cmd('./build/benchmark',alg,str(n),'7')
-            part=list(csv.DictReader(io.StringIO(result)));rows.extend(part)
-            times=[float(r['segundos']) for r in part]
-            print(f'{alg:6s} n={n:8d} mediana={statistics.median(times):.6f}s u={part[0]["u"]}',flush=True)
-    with (ROOT/'dados/resultados_empiricos.csv').open('w') as f:
-        w=csv.DictWriter(f,fieldnames=rows[0],lineterminator="\n");w.writeheader();w.writerows(rows)
-    fields=['algoritmo','n','mediana_s','min_s','max_s','q1_s','q3_s','u','pilha_compilador_bytes','margem_abi_bytes','extra_conservador_bytes','heap_algoritmo_bytes','entrada_bytes','rss_pico_kib']
-    frames={}
-    for file in [ROOT/'build/heap.su',ROOT/'build/bitmap.su']:
-        for line in file.read_text().splitlines():
-            loc,size,kind=line.split('\t'); assert kind=='static'
-            frames[loc.split(':')[-1]]=int(size)
-    (ROOT/'dados/evidencias').mkdir(exist_ok=True)
-    for file in [ROOT/'build/heap.su',ROOT/'build/bitmap.su']:
-        shutil.copy2(file,ROOT/'dados/evidencias'/file.name)
-
-    stack={'heap':frames['heap_unique']+frames['sift'],'bitmap':frames['bitmap_unique']}
-    assert stack['heap']+16<=256
-
-    undefined=cmd('nm','-u','build/heap.o','build/bitmap.o')
-    assert not any(l.strip() and not l.strip().endswith(':') for l in undefined.splitlines()),undefined
-    (ROOT/'dados/memoria.txt').write_text('Frames GCC (-fstack-usage):\n'+json.dumps(frames,indent=2)+
-        '\nHeap iterativo: soma heap_unique+sift + margem ABI 16 B.\nBitmap: frame bitmap_unique + margem ABI 16 B.\n'+
-        'Heap dinamico dos algoritmos: 0 B (inspecao fonte + objetos sem simbolos externos).\n'+undefined)
-    (ROOT/'dados/desmontagem.txt').write_text('\n'.join(line.rstrip() for line in cmd('objdump','-dr','build/heap.o','build/bitmap.o').splitlines())+'\n')
+        rng = random.Random(20261108)
+        original = array('H', (rng.getrandbits(16) for _ in range(n)))
+        for name, run in [('heap',heap_unique),('bitmap',bitmap_unique)]:
+            times = []
+            for repetition in range(-1,3):
+                a = array('H', original)
+                start = perf_counter_ns()
+                u = run(a)
+                seconds = (perf_counter_ns()-start)/1e9
+                validate(original,a,u,name=='heap')
+                print(f'{name} n={n} rodada={repetition} tempo={seconds:.6f}s u={u}',flush=True)
+                if repetition >= 0:
+                    times.append(seconds)
+                    rows.append({'algoritmo':name,'n':n,'rodada':repetition,'segundos':seconds,'u':u,'entrada_bytes':2*n})
+            if n == 1000:
+                a = array('H',original)
+                gc.collect()
+                tracemalloc.start()
+                baseline = tracemalloc.get_traced_memory()[0]
+                tracemalloc.reset_peak()
+                run(a)
+                _, peak = tracemalloc.get_traced_memory()
+                tracemalloc.stop()
+                memory[name] = {'pico_alocacoes_rastreadas_bytes':peak-baseline,'n_medido':n,
+                                'metodo':'tracemalloc; rodada separada dos tempos; entrada criada antes; não inclui toda a memória interna do interpretador'}
+            with (R/'dados/resultados_empiricos.csv').open('w') as f:
+                w=csv.DictWriter(f,fieldnames=list(rows[0]),lineterminator='\n');w.writeheader();w.writerows(rows)
     summary=[]
     for n in [1000,100000,10000000]:
-        for alg in ['heap','bitmap']:
-            part=[r for r in rows if int(r['n'])==n and r['algoritmo']==alg]
-            ts=sorted(float(r['segundos']) for r in part);q=statistics.quantiles(ts,n=4)
-            summary.append(dict(zip(fields,[alg,n,statistics.median(ts),min(ts),max(ts),q[0],q[2],part[0]['u'],stack[alg],16,stack[alg]+16,0,2*n,max(int(r['rss_pico_kib']) for r in part)])))
-    with (ROOT/'dados/resumo.csv').open('w') as f:
-        w=csv.DictWriter(f,fieldnames=fields,lineterminator="\n");w.writeheader();w.writerows(summary)
-if __name__=='__main__':main()
+        for name in ['heap','bitmap']:
+            group=[r for r in rows if r['n']==n and r['algoritmo']==name]
+            ts=[r['segundos'] for r in group]
+            summary.append({'algoritmo':name,'n':n,'u':group[0]['u'],'mediana_s':statistics.median(ts),'min_s':min(ts),'max_s':max(ts),'entrada_bytes':2*n})
+    (R/'dados/resumo.json').write_text(json.dumps(summary,indent=2))
+    env['memoria']=memory
+    env['rss_pico_processo_kib']=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    (R/'dados/ambiente.json').write_text(json.dumps(env,indent=2,ensure_ascii=False))
+
+
+if __name__ == '__main__':
+    main()
