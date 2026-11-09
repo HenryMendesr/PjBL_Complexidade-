@@ -1,6 +1,6 @@
 # Roteiro de apresentação e defesa oral
 
-Apresentação sugerida de 8 a 10 minutos; adaptar ao tempo concedido, sem atribuir papéis a integrantes que não foram informados.
+Apresentação de 8 a 10 minutos. Integrantes: Henry Rodrigues, Rafael Maluf e Matheus.
 
 - Minuto 0–1: explicar o problema, D=65536 e a diferença entre 256 B extras e 2 s no hardware da disciplina. Declarar o caráter provisório de linguagem/par.
 - Minutos 1–3: mostrar contrato e invariantes. Heap ordena e compacta; bitmap testa e marca um bit, mantendo primeiras ocorrências. Ambos retornam prefixo de u elementos.
@@ -37,4 +37,4 @@ Apresentação sugerida de 8 a 10 minutos; adaptar ao tempo concedido, sem atrib
 
 **De onde vieram os segundos das oito curvas?** São modelos declarados, com 1 ns por operação nominal, multiplicadores e I/O idealizado. Não foram medidos e não oferecem garantia de prazo.
 
-**Por que C se a rubrica fala Pascal?** A seção 6 permite linguagem à escolha; adotamos C conforme o pedido, documentamos a inconsistência e precisamos confirmar com o professor.
+**Por que C se a rubrica fala Pascal?** A seção 6 permite linguagem à escolha; adotamos C com base nessa seção, documentamos a inconsistência e precisamos confirmar com o professor.

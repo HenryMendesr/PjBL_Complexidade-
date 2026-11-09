@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Uma execução de processo por algoritmo/n; aquecimento + 7 rodadas."""
+
 import csv, io, json, platform, statistics, subprocess, shutil
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
@@ -30,10 +30,10 @@ def main():
     (ROOT/'dados/evidencias').mkdir(exist_ok=True)
     for file in [ROOT/'build/heap.su',ROOT/'build/bitmap.su']:
         shutil.copy2(file,ROOT/'dados/evidencias'/file.name)
-    # Soma de frames simultâneos, mais margem de 16 B na fronteira chamador/ABI.
+
     stack={'heap':frames['heap_unique']+frames['sift'],'bitmap':frames['bitmap_unique']}
     assert stack['heap']+16<=256
-    # Nenhuma função externa é chamada pelos dois objetos: verifica alocação oculta.
+
     undefined=cmd('nm','-u','build/heap.o','build/bitmap.o')
     assert not any(l.strip() and not l.strip().endswith(':') for l in undefined.splitlines()),undefined
     (ROOT/'dados/memoria.txt').write_text('Frames GCC (-fstack-usage):\n'+json.dumps(frames,indent=2)+

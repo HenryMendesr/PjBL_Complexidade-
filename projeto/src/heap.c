@@ -1,6 +1,6 @@
 #include "dedup.h"
-/* Restaura max-heap em a[0,end), sem recursão. root<end/2 evita
- * overflow em 2*root+1 e identifica precisamente nós com filhos. */
+
+
 static void sift(uint16_t *a, size_t root, size_t end) {
     while (root < end / 2) {
         size_t child = 2 * root + 1;

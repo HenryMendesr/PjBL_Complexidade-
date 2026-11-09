@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gera previsões em log, gráficos e relatório PDF a partir dos CSV reais."""
+
 import csv, json, math, re, statistics
 from pathlib import Path
 from xml.sax.saxutils import escape
@@ -56,7 +56,7 @@ axs[1].legend(fontsize=8)
 for ax in axs:ax.set_xscale('log');ax.set_xlabel('n (leituras)');ax.grid(True,alpha=.2)
 h,l=axs[0].get_legend_handles_labels();fig.legend(h,l,loc='lower center',ncol=3,fontsize=8)
 fig.tight_layout(rect=(0,.21,1,.96));fig.savefig(R/'graficos/memoria.png');fig.savefig(R/'graficos/memoria.pdf');plt.close(fig)
-# Fonte editável e seção automática dos resultados.
+
 env=json.loads((R/'dados/ambiente.json').read_text())
 cpu=next((l.split(':',1)[1].strip() for l in env['cpu'].splitlines() if l.startswith('Model name:')),'ver ambiente.json')
 result='## Resultados locais efetivamente medidos\n\n'
@@ -66,12 +66,12 @@ for r in rows:
     result+=f"| {r['algoritmo']} | {r['n']} | {r['u']} | {float(r['mediana_s']):.9f} | {float(r['min_s']):.9f}–{float(r['max_s']):.9f} | {float(r['q1_s']):.9f}–{float(r['q3_s']):.9f} | {r['extra_conservador_bytes']} | {r['rss_pico_kib']} |\n"
 result+='\nO RSS é o máximo residente de cada processo Linux, inclui dois vetores, oráculo, runtime e páginas tocadas. Não é memória extra do algoritmo e não deve ser subtraído do vetor para inferir a pilha. A inicialização do bitmap está dentro do cronômetro.\n'
 (R/'docs/resultados.md').write_text(result)
-parts=['# PjBL: Duas empresas, duas restrições\n\nDeduplicação de leituras de sensores — relatório técnico.\n\nAutoria e dados acadêmicos: não informados. Par e linguagem provisórios; validação na máquina de referência pendente.\n\n',
+parts=['# PjBL: Duas empresas, duas restrições\n\nDeduplicação de leituras de sensores — relatório técnico.\n\nIntegrantes: Henry Rodrigues, Rafael Maluf e Matheus.\n\n',
 (R/'docs/fundamentacao_matematica.md').read_text(),(R/'docs/analise_teorica.md').read_text(),(R/'docs/metodologia.md').read_text(),result,
 (R/'docs/modelos.md').read_text(),'\n![Tempo](graficos/tempo.png)\n\n![Memória](graficos/memoria.png)\n\n',
 (R/'docs/discussao.md').read_text(),(R/'docs/checklist.md').read_text(),(R/'docs/apresentacao.md').read_text()]
 source='\n\n'.join(parts);(R/'docs/relatorio.md').write_text(source)
-# Renderer Markdown leve: texto, títulos, tabelas, imagens e blocos de código.
+
 font='/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
 pdfmetrics.registerFont(TTFont('DV',font));pdfmetrics.registerFont(TTFont('DVB',font.replace('.ttf','-Bold.ttf')))
 ss=getSampleStyleSheet()
@@ -81,7 +81,7 @@ for h in ['Heading1','Heading2','Heading3']:ss[h].fontName='DVB';ss[h].spaceBefo
 ss['Heading1'].fontSize=17;ss['Heading2'].fontSize=13;ss['Heading3'].fontSize=11
 ss['Code'].fontSize=7
 story=[];lines=source.splitlines();i=0
-# HTML escapes keep document content inert.
+
 def inline(s):
     s=escape(s);s=re.sub(r'\*\*(.+?)\*\*',r'<b>\1</b>',s);s=re.sub(r'`([^`]+)`',r'<font name="DV">\1</font>',s);return s
 while i<len(lines):
@@ -110,6 +110,6 @@ while i<len(lines):
     while i<len(lines) and lines[i].strip() and not lines[i].startswith(('#','|','![','```','- ')):buf.append(lines[i]);i+=1
     story.append(Paragraph(inline(' '.join(buf)),ss['Normal']))
 def footer(canvas,doc):
-    canvas.setFont('DV',8);canvas.drawString(42,24,'PjBL — medições locais; aprovações acadêmicas pendentes');canvas.drawRightString(552,24,str(doc.page))
-SimpleDocTemplate(str(R/'relatorio.pdf'),pagesize=(595,842),rightMargin=52,leftMargin=42,topMargin=40,bottomMargin=42,title='PjBL — Deduplicação de leituras de sensores',author='Autoria não informada').build(story,onFirstPage=footer,onLaterPages=footer)
+    canvas.setFont('DV',8);canvas.drawString(42,24,'PjBL — Complexidade de Algoritmos');canvas.drawRightString(552,24,str(doc.page))
+SimpleDocTemplate(str(R/'relatorio.pdf'),pagesize=(595,842),rightMargin=52,leftMargin=42,topMargin=40,bottomMargin=42,title='PjBL — Deduplicação de leituras de sensores',author='Henry Rodrigues; Rafael Maluf; Matheus').build(story,onFirstPage=footer,onLaterPages=footer)
 print('Gráficos, modelos em CSV, fonte Markdown e relatório PDF gerados.')

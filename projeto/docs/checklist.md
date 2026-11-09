@@ -4,7 +4,7 @@ Legenda: CONCLUÍDO significa produzido e/ou verificado localmente; PENDENTE é 
 
 | Requisito | Situação e evidência |
 |---|---|
-| Leitura integral e interpretação do PDF | CONCLUÍDO; docs/analise_teorica.md documenta divergências |
+| Interpretação do enunciado | CONCLUÍDO; docs/analise_teorica.md |
 | Domínio 0–65535 e n=10³,10⁵,10⁷ | CONCLUÍDO; uint16_t, CSV real e casos nas três escalas |
 | Provas, somatórios e probabilidades auditadas | CONCLUÍDO; fundamentacao_matematica.md e 105 verificações independentes em revisao_matematica.txt |
 | Dez análises com tempo, espaço e hipóteses | CONCLUÍDO; dez seções em analise_teorica.md |
@@ -28,7 +28,7 @@ Legenda: CONCLUÍDO significa produzido e/ou verificado localmente; PENDENTE é 
 | Código, automação, dependências, README, gráficos e ZIP | CONCLUÍDO na entrega; roteiro de reprodução no README |
 | Aprovação prévia do par pelo professor | PENDENTE; não foi informada |
 | Confirmação de linguagem C | PENDENTE; divergência textual com Pascal |
-| Dados dos integrantes/instituição/professor | PENDENTE; não inventados |
+| Integrantes | Henry Rodrigues, Rafael Maluf e Matheus |
 | Bloom empírico ≤1% | NÃO SE APLICA; Bloom só analisado, soluções exatas |
 
 ## Revisão pelos seis critérios da rubrica

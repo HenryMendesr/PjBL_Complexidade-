@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Checagens de integridade da entrega e de coerência CSV/modelos."""
+
 import csv, math, statistics, subprocess
 from pathlib import Path
 R=Path(__file__).resolve().parents[1]
@@ -34,7 +34,7 @@ def main():
         text=(R/logfile).read_text();assert 'OK: 222 casos x 2 algoritmos' in text
         assert 'ERROR: AddressSanitizer' not in text and 'runtime error:' not in text
     text=subprocess.check_output(['pdftotext',str(R/'relatorio.pdf'),'-'],text=True)
-    for term in ['Bogosort','Resultados locais','PENDENTE','Metodologia','Extrapolações','256','96']:
+    for term in ['Bogosort','Resultados locais','PENDENTE','Metodologia','Extrapolações','256','96','Henry Rodrigues','Rafael Maluf','Matheus']:
         assert term in text,term
     print(f'OK: {len(raw)} medições, {len(summary)} resumos, {len(predicted)} previsões; PDF, fontes e evidências presentes e coerentes.')
 if __name__=='__main__':main()

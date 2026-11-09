@@ -1,10 +1,10 @@
-"""Modelos teóricos; nenhuma implementação de deduplicação."""
+
 import math
 D=65536; L10=math.log(10); C=1e-9
 def lg(x):return math.log10(max(x,1e-300))
 def models(n):
     u=D*(-math.expm1(n*math.log1p(-1/D)))
-    # Bogosort: todos distintos quando possível; multiplicidades balanceadas depois.
+
     q,r=divmod(n,D)
     logattempt=(math.lgamma(n+1)-(D-r)*math.lgamma(q+1)-r*math.lgamma(q+2))/L10
     time=[lg(C*n*max(1,u/2)),lg(5*C*n),lg(5*C*n*math.log2(u+1)),

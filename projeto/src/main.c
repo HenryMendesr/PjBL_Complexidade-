@@ -26,7 +26,7 @@ int main(int argc,char **argv) {
     size_t (*run)(uint16_t*,size_t)=bitmap?bitmap_unique:heap_unique;
     puts("algoritmo,n,rodada,segundos,u,seed,distribuicao,entrada_bytes,rss_pico_kib");
     for(long r=-1;r<reps;++r) {
-        memcpy(b,a,n*sizeof(*a)); /* cópia e oráculo fora da janela */
+        memcpy(b,a,n*sizeof(*a));
         double t=now(); size_t u=run(b,n); double elapsed=now()-t;
         validate(a,n,b,u,!bitmap);
         struct rusage usage; if(getrusage(RUSAGE_SELF,&usage)) return 1;

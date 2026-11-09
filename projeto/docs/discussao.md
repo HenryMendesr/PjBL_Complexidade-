@@ -8,4 +8,4 @@ Há efeitos de aquecimento, escalonamento, compartilhamento da CPU virtual, freq
 
 O Heap Sort também pode atender ao prazo local, mas isso não o torna a melhor recomendação Datacenter: bitmap faz menos trabalho e explora uma garantia do domínio. Se o domínio crescer ou a estabilidade for obrigatória para o cliente embarcado, a escolha precisará ser revista. Se surgir requisito de manter a entrada intacta, ambos os contratos atuais deixam de atendê-lo sem cópia externa.
 
-Pendências reais: aprovação do par, confirmação de C diante da rubrica que menciona Pascal, dados acadêmicos de autoria e reprodução no hardware da disciplina. A checagem de pilha precisa ser refeita em qualquer novo alvo. Não há aprovação ou teste na máquina de referência presumidos nesta entrega.
+Pendências reais: aprovação do par, confirmação de C diante da rubrica que menciona Pascal e reprodução no hardware da disciplina. A checagem de pilha precisa ser refeita em qualquer novo alvo.

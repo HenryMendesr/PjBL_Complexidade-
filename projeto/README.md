@@ -1,8 +1,10 @@
 # PjBL — Deduplicação de leituras de sensores
 
+**Integrantes:** Henry Rodrigues, Rafael Maluf e Matheus.
+
 Projeto acadêmico funcional com exatamente duas estratégias de deduplicação em C: Heap Sort iterativo in-place para Embarca e bitmap de 65536 bits para Datacenter. Python é usado só para experimentos, gráficos e documentos. Texto em português brasileiro.
 
-**Pendências externas:** aprovação do par e de C (o PDF permite escolha mas menciona Pascal na rubrica); teste na máquina de referência; identificação acadêmica dos autores. Nada disso foi inventado. O relatório apresenta somente medições locais.
+**Pendências externas:** aprovação do par e de C (o PDF permite escolha mas menciona Pascal na rubrica); teste na máquina de referência. O relatório apresenta somente medições locais.
 
 ## Prioridade da apresentação: lógica matemática
 

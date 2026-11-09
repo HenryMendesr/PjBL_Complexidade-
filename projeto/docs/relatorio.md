@@ -2,11 +2,11 @@
 
 Deduplicação de leituras de sensores — relatório técnico.
 
-Autoria e dados acadêmicos: não informados. Par e linguagem provisórios; validação na máquina de referência pendente.
+Integrantes: Henry Rodrigues, Rafael Maluf e Matheus.
 
 
 
-# Fundamentação matemática e revisão das deduções
+# Fundamentação matemática
 
 Este capítulo organiza a defesa do trabalho: primeiro o que precisa ser provado, depois quanto custa. Resultados empíricos complementam a análise; eles não substituem uma prova, e uma função assintótica não determina segundos.
 
@@ -48,7 +48,7 @@ A aproximação nu/2 para a curva é um cenário de buscas com posições aproxi
 
 **Bogosort.** Há n! permutações de objetos rotulados, mas ∏cⱼ! delas produzem a sequência de valores ordenada. Portanto q=∏cⱼ!/n!. Embaralhamentos uniformes independentes dão distribuição geométrica: E[tentativas]=1/q. Para uma entrada inicialmente desordenada, esse é o número esperado de embaralhamentos até o primeiro sucesso; a checagem inicial acrescenta apenas uma verificação. Se já ordenada, a função hipotética termina imediatamente. Tempo esperado cn/q é modelo de custo por tentativa, não garantia. Com n=1000 distintos, log₁₀(1/q)=2567,604644222. Para n>D usar n! sem dividir pelas multiplicidades superestima o número de tentativas; usamos lgamma para calcular o logaritmo sem overflow.
 
-**Subconjuntos.** Cada posição tem duas decisões independentes, logo 2ⁿ folhas e 2ⁿ⁺¹-1 nós na árvore binária completa. Cada posição pertence a exatamente metade dos subconjuntos: Σ(t=0..n)t binom(n,t)=n2ⁿ⁻¹. Com 2 B por elemento, a materialização exige n2ⁿ B só de payload. Assim, materializar e copiar todos os elementos custa Θ(n2ⁿ) tempo e espaço, além de descritores e pilha Θ(n). Somente enumerar em streaming custa Θ(2ⁿ) visitas e pode usar heap zero; não confundir as duas variantes. As curvas desta revisão usam materialização para AMBOS tempo e RAM. Em n=1000, log₁₀(bytes)=304,029995664, e não apenas log₁₀(2¹⁰⁰⁰)=301,029995664.
+**Subconjuntos.** Cada posição tem duas decisões independentes, logo 2ⁿ folhas e 2ⁿ⁺¹-1 nós na árvore binária completa. Cada posição pertence a exatamente metade dos subconjuntos: Σ(t=0..n)t binom(n,t)=n2ⁿ⁻¹. Com 2 B por elemento, a materialização exige n2ⁿ B só de payload. Assim, materializar e copiar todos os elementos custa Θ(n2ⁿ) tempo e espaço, além de descritores e pilha Θ(n). Somente enumerar em streaming custa Θ(2ⁿ) visitas e pode usar heap zero; não confundir as duas variantes. As curvas do relatório usam materialização para AMBOS tempo e RAM. Em n=1000, log₁₀(bytes)=304,029995664, e não apenas log₁₀(2¹⁰⁰⁰)=301,029995664.
 
 **Unário.** Seja Lⱼ=xⱼ+1 o tamanho em bytes do registro j, com j=1,…,n. Gravar todos os registros custa S=ΣLⱼ. Consultar todos os registros anteriores para cada posição, sem parar cedo, relê o registro j exatamente n-j vezes. O tráfego idealizado total é V=Σ(n-j+1)Lⱼ. Essa identidade não exige independência. Para comprimentos de mesma esperança μ=32768,5, a linearidade dá E[V]=μn(n+1)/2, e E[S]=μn. A expressão inclui a gravação inicial e todas as releituras, sem contar novamente um registro corrente que já está disponível no vetor. Para n=10⁷: E[V]=1638425163842500000 B, aproximadamente 1,638425164×10¹⁸ B, e E[V]/10⁹≈1,638×10⁹ s a 1 GB/s. Não estão incluídos syscalls, seeks, comparar contadores e outros custos; esse throughput é hipótese otimista. O custo completo de CPU inclui Ω(n) acessos ao vetor e o custo de contar símbolos; no domínio fixo, o modelo de varredura completa tem Θ(n²) tempo de I/O em melhor e pior caso, com constantes dependentes dos comprimentos.
 
@@ -73,7 +73,7 @@ As verificações numéricas deste capítulo estão em scripts/validar_matematic
 
 ## Escopo, interpretação e hipóteses
 
-O PDF foi lido integralmente. O pedido do estudante determina a execução dos materiais; o PDF fornece requisitos acadêmicos e não prova aprovação. Não foram informados nomes, instituição, professor nem máquina de referência. O par Heap Sort/bitmap e a linguagem C são PROVISÓRIOS. A seção 6 permite escolher a linguagem; a seção 3 recomenda C/Python, mas o objetivo e o critério 3 da rubrica mencionam Pascal. Adotamos C para as duas soluções e Python somente na infraestrutura. Confirmar essa interpretação e o par com o professor antes da submissão acadêmica. A implementação já preparada não equivale à aprovação prévia exigida.
+O projeto compara Heap Sort iterativo e bitmap para deduplicação de leituras de 16 bits. As duas implementações utilizam C; Python é empregado na automação dos experimentos e dos documentos. A seção 6 do enunciado permite a escolha da linguagem, enquanto os objetivos e o critério 3 da rubrica mencionam Pascal. A confirmação da linguagem e a aprovação do par são requisitos acadêmicos registrados na checklist.
 
 Seja n o número de leituras, u o número de valores distintos e D=65536. Temos 0≤u≤min(n,D). Para n=100000 e n=10000000, duplicatas são inevitáveis. O vetor usa 2n bytes com uint16_t; n=10000000 ocupa 20000000 bytes. O limite Embarca é de 256 bytes EXTRAS ao vetor, mesmo que esse vetor não caiba num sensor real; essa residência é premissa do enunciado. A Datacenter exige tempo estritamente menor que 2 s na máquina da disciplina. A Embarca não tem prazo numérico explícito. Não atribuímos a ela o limite de 2 s.
 
@@ -133,7 +133,7 @@ A tabela do PDF descreve serialização, mas não especifica como comparar e rem
 
 Volume S=Σ(xᵢ+1), entre n e 65536n bytes; zero precisa do delimitador. Só codificar custa Θ(n+Σxᵢ), NÃO tempo exponencial em n para domínio fixo. Comparar por varredura física dos registros anteriores pode custar O(nS), com Θ(n²D) no cenário de comprimentos longos e busca que não encerra cedo. Média depende de ordem e multiplicidades; modelo pessimista dos gráficos lê metade do arquivo para cada consulta, sem atalhos, mesmo após encontrar duplicata. O tráfego exato dessa auditoria é V=Σ(j=1..n)(n-j+1)(xⱼ+1), independentemente de duplicatas; Θ(nS) é atingível, mas não é identidade para comprimentos arbitrários quando D também varia. Melhor Θ(n²) quando todos os comprimentos são 1 nesse modelo; com D fixo todos esses limites são quadráticos em n, com constantes distintas. Uma versão que encerra cedo seria mais rápida. Não atribuímos Θ(S) ao deduplicador completo.
 
-Pilha/heap de trabalho podem ser constantes e inferiores a 256 B numa implementação de baixo nível com buffers mínimos, mas libc, FILE e buffers do kernel precisam ser contabilizados conforme a plataforma. Disco Θ(S). Não há medição nem garantia de RAM para essa estratégia hipotética. Se um valor tem b bits e chega a 2ᵇ-1, representá-lo em unário exige Θ(2ᵇ) símbolos; é exponencial em b, não em n quando b=16 fixo. Codificar bits em vez de bytes reduz volume até 8 vezes, mantendo necessidade de delimitadores e a análise de crescimento. Embarca pode falhar no armazenamento, disponibilidade de disco, buffers e tempo prático; não existe restrição numérica de disco no enunciado, portanto não inventamos uma violação formal de capacidade. Datacenter: o modelo de I/O abaixo excede 2 s. Unário serve em exemplos minúsculos, contagens pequenas e formatos didáticos.
+Pilha/heap de trabalho podem ser constantes e inferiores a 256 B numa implementação de baixo nível com buffers mínimos, mas libc, FILE e buffers do kernel precisam ser contabilizados conforme a plataforma. Disco Θ(S). Não há medição nem garantia de RAM para essa estratégia hipotética. Se um valor tem b bits e chega a 2ᵇ-1, representá-lo em unário exige Θ(2ᵇ) símbolos; é exponencial em b, não em n quando b=16 fixo. Codificar bits em vez de bytes reduz volume até 8 vezes, mantendo necessidade de delimitadores e a análise de crescimento. Embarca pode falhar no armazenamento, disponibilidade de disco, buffers e tempo prático; não existe restrição numérica de disco no enunciado, portanto o volume de disco caracteriza uma limitação prática, sem teto formal de capacidade especificado. Datacenter: o modelo de I/O abaixo excede 2 s. Unário serve em exemplos minúsculos, contagens pequenas e formatos didáticos.
 
 ## 10. Matriz n×n de auditoria
 
@@ -167,8 +167,6 @@ Heap supera força bruta em previsibilidade de trabalho para u alto, não exige 
 - GCC, Developer Options: -fstack-usage. https://gcc.gnu.org/onlinedocs/gcc/Developer-Options.html
 - POSIX, clock_gettime. https://pubs.opengroup.org/onlinepubs/9799919799/functions/clock_gettime.html
 - Linux man-pages, getrusage(2), ru_maxrss em KiB no Linux. https://man7.org/linux/man-pages/man2/getrusage.2.html
-
-As referências são fontes teóricas/documentais; não foram apresentadas como medições nem como aprovações. A disponibilidade online dos endereços não foi auditada nesta execução.
 
 
 # Metodologia e evidências de memória
@@ -243,7 +241,7 @@ Há efeitos de aquecimento, escalonamento, compartilhamento da CPU virtual, freq
 
 O Heap Sort também pode atender ao prazo local, mas isso não o torna a melhor recomendação Datacenter: bitmap faz menos trabalho e explora uma garantia do domínio. Se o domínio crescer ou a estabilidade for obrigatória para o cliente embarcado, a escolha precisará ser revista. Se surgir requisito de manter a entrada intacta, ambos os contratos atuais deixam de atendê-lo sem cópia externa.
 
-Pendências reais: aprovação do par, confirmação de C diante da rubrica que menciona Pascal, dados acadêmicos de autoria e reprodução no hardware da disciplina. A checagem de pilha precisa ser refeita em qualquer novo alvo. Não há aprovação ou teste na máquina de referência presumidos nesta entrega.
+Pendências reais: aprovação do par, confirmação de C diante da rubrica que menciona Pascal e reprodução no hardware da disciplina. A checagem de pilha precisa ser refeita em qualquer novo alvo.
 
 
 # Checklist de entrega e validação
@@ -252,7 +250,7 @@ Legenda: CONCLUÍDO significa produzido e/ou verificado localmente; PENDENTE é 
 
 | Requisito | Situação e evidência |
 |---|---|
-| Leitura integral e interpretação do PDF | CONCLUÍDO; docs/analise_teorica.md documenta divergências |
+| Interpretação do enunciado | CONCLUÍDO; docs/analise_teorica.md |
 | Domínio 0–65535 e n=10³,10⁵,10⁷ | CONCLUÍDO; uint16_t, CSV real e casos nas três escalas |
 | Provas, somatórios e probabilidades auditadas | CONCLUÍDO; fundamentacao_matematica.md e 105 verificações independentes em revisao_matematica.txt |
 | Dez análises com tempo, espaço e hipóteses | CONCLUÍDO; dez seções em analise_teorica.md |
@@ -276,7 +274,7 @@ Legenda: CONCLUÍDO significa produzido e/ou verificado localmente; PENDENTE é 
 | Código, automação, dependências, README, gráficos e ZIP | CONCLUÍDO na entrega; roteiro de reprodução no README |
 | Aprovação prévia do par pelo professor | PENDENTE; não foi informada |
 | Confirmação de linguagem C | PENDENTE; divergência textual com Pascal |
-| Dados dos integrantes/instituição/professor | PENDENTE; não inventados |
+| Integrantes | Henry Rodrigues, Rafael Maluf e Matheus |
 | Bloom empírico ≤1% | NÃO SE APLICA; Bloom só analisado, soluções exatas |
 
 ## Revisão pelos seis critérios da rubrica
@@ -295,7 +293,7 @@ A soma dos pesos é 100%. Não se estima nota: ela depende do professor e das pe
 
 # Roteiro de apresentação e defesa oral
 
-Apresentação sugerida de 8 a 10 minutos; adaptar ao tempo concedido, sem atribuir papéis a integrantes que não foram informados.
+Apresentação de 8 a 10 minutos. Integrantes: Henry Rodrigues, Rafael Maluf e Matheus.
 
 - Minuto 0–1: explicar o problema, D=65536 e a diferença entre 256 B extras e 2 s no hardware da disciplina. Declarar o caráter provisório de linguagem/par.
 - Minutos 1–3: mostrar contrato e invariantes. Heap ordena e compacta; bitmap testa e marca um bit, mantendo primeiras ocorrências. Ambos retornam prefixo de u elementos.
@@ -332,4 +330,4 @@ Apresentação sugerida de 8 a 10 minutos; adaptar ao tempo concedido, sem atrib
 
 **De onde vieram os segundos das oito curvas?** São modelos declarados, com 1 ns por operação nominal, multiplicadores e I/O idealizado. Não foram medidos e não oferecem garantia de prazo.
 
-**Por que C se a rubrica fala Pascal?** A seção 6 permite linguagem à escolha; adotamos C conforme o pedido, documentamos a inconsistência e precisamos confirmar com o professor.
+**Por que C se a rubrica fala Pascal?** A seção 6 permite linguagem à escolha; adotamos C com base nessa seção, documentamos a inconsistência e precisamos confirmar com o professor.

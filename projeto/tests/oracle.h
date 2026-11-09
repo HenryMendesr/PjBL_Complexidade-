@@ -3,8 +3,8 @@
 #include "dedup.h"
 #include <assert.h>
 #include <string.h>
-/* Oráculo EXCLUSIVO de testes: histograma de frequências, não candidato
- * a cliente. Verifica conjunto, unicidade e ordem contratada. */
+
+
 static void validate(const uint16_t *input, size_t n, const uint16_t *out,
                      size_t u, int sorted) {
     size_t freq[65536] = {0};
