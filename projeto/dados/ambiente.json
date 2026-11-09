@@ -1,8 +1,7 @@
 {
   "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
   "sistema": "Linux-6.18.57-x86_64-with-glibc2.41",
-  "cpu": "",
-  "coleta_utc": "2026-11-09T12:00:33.301920+00:00",
+  "coleta_utc": "2026-11-09T14:46:34.041836+00:00",
   "seed": 20261108,
   "gerador": "random.Random(seed).getrandbits(16)",
   "repeticoes": 3,
@@ -10,9 +9,31 @@
   "cpu_info": "model name\t: AMD EPYC 9V74 80-Core Processor",
   "fontes_sha256": {
     "bitmap.py": "6e674407a9dfeb537c5ee5171710c155e74648ceb6c0ad12a388b90594d72779",
-    "main.py": "043be1fbbe5eed24866950447a1e448ecc062880593772b6ec09819c64045e66",
-    "heap.py": "5d8b727c644941d0d62ba3ba55fd129f8efd9971e85affa17d88438a392c0fe8"
+    "heap.c": "ef02d4ce5aa10da3492b4a27e12d93608b1f1f7425a6c26d3f1c7f6fdb62fd70",
+    "heap.py": "fb0123dd8ee2237bf8766c8c8358334f36f455a195cbea22351ad73dd6b2f1b4",
+    "main.py": "342f861a05b1eea86d20cf43e004649e29de361e3de72c44723f3e16943580ca"
   },
-  "rss_pico_processo_kib": 78080,
-  "memoria_arquivo": "memoria.json"
+  "linguagens": {
+    "heap": "C",
+    "bitmap": "Python"
+  },
+  "compilador_c": "gcc (Debian 14.2.0-19) 14.2.0",
+  "flags_c": [
+    "-std=c11",
+    "-O3",
+    "-Wall",
+    "-Wextra",
+    "-Wpedantic",
+    "-Werror",
+    "-fno-inline",
+    "-fno-omit-frame-pointer",
+    "-mno-red-zone",
+    "-fno-tree-loop-distribute-patterns",
+    "-fno-ipa-cp",
+    "-fstack-usage",
+    "-fPIC"
+  ],
+  "biblioteca_sha256": "9f910cb9d015589d94c67aaedad3df40ae1b36a808999a995cc840534278678d",
+  "memoria_arquivo": "memoria.json",
+  "rss_pico_processo_kib": 78940
 }

@@ -1,99 +1,113 @@
 {
-  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
-  "sistema": "Linux-6.18.57-x86_64-with-glibc2.41",
-  "coleta_utc": "2026-11-09T13:55:30.142525+00:00",
-  "seed": 20261108,
-  "gerador": "random.Random(seed).getrandbits(16)",
-  "repeticoes_por_combinacao": 1,
-  "aquecimento": "mesma função em entrada pequena; gc.collect antes de cada rastreamento",
-  "metodo": "tracemalloc; execução completa separada dos tempos; entrada, relógio e validação preparados fora do rastreamento; não inclui toda a memória interna do interpretador",
+  "coleta_utc": "2026-11-09T14:47:07.813261+00:00",
   "fontes_sha256": {
     "bitmap.py": "6e674407a9dfeb537c5ee5171710c155e74648ceb6c0ad12a388b90594d72779",
-    "main.py": "043be1fbbe5eed24866950447a1e448ecc062880593772b6ec09819c64045e66",
-    "heap.py": "5d8b727c644941d0d62ba3ba55fd129f8efd9971e85affa17d88438a392c0fe8"
+    "heap.c": "ef02d4ce5aa10da3492b4a27e12d93608b1f1f7425a6c26d3f1c7f6fdb62fd70",
+    "heap.py": "fb0123dd8ee2237bf8766c8c8358334f36f455a195cbea22351ad73dd6b2f1b4",
+    "main.py": "342f861a05b1eea86d20cf43e004649e29de361e3de72c44723f3e16943580ca"
   },
+  "seed": 20261108,
+  "gerador": "random.Random(seed).getrandbits(16)",
   "resultados": [
     {
-      "algoritmo": "bitmap",
+      "algoritmo": "heap",
+      "linguagem": "C",
       "n": 1000,
       "u": 996,
-      "pico_alocacoes_rastreadas_bytes": 8553,
-      "retido_apos_chamada_bytes": 136,
-      "segundos_rodada_instrumentada": 0.0012641319990507327,
       "entrada_bytes": 2000,
-      "rss_pico_processo_kib": 14080
+      "extra_bytes": 96,
+      "tipo": "limite_pilha_gcc_com_margem",
+      "heap_dinamico_bytes": 0,
+      "metodo": "GCC estático + fonte/objeto auditados; execução C completa validada neste n"
     },
     {
-      "algoritmo": "heap",
+      "algoritmo": "bitmap",
+      "linguagem": "Python",
       "n": 1000,
       "u": 996,
-      "pico_alocacoes_rastreadas_bytes": 380,
-      "retido_apos_chamada_bytes": 88,
-      "segundos_rodada_instrumentada": 0.027708851001079893,
       "entrada_bytes": 2000,
-      "rss_pico_processo_kib": 14080
-    },
-    {
-      "algoritmo": "bitmap",
-      "n": 100000,
-      "u": 51281,
-      "pico_alocacoes_rastreadas_bytes": 8553,
-      "retido_apos_chamada_bytes": 136,
-      "segundos_rodada_instrumentada": 0.11749707299895817,
-      "entrada_bytes": 200000,
-      "rss_pico_processo_kib": 26396
+      "extra_bytes": 8553,
+      "tipo": "pico_tracemalloc",
+      "segundos_rodada_instrumentada": 0.0013511990000552032,
+      "metodo": "uma execução completa rastreada; entrada/relógio/validação fora; não é RAM total do interpretador"
     },
     {
       "algoritmo": "heap",
+      "linguagem": "C",
       "n": 100000,
       "u": 51281,
-      "pico_alocacoes_rastreadas_bytes": 380,
-      "retido_apos_chamada_bytes": 88,
-      "segundos_rodada_instrumentada": 6.16772697200031,
       "entrada_bytes": 200000,
-      "rss_pico_processo_kib": 26396
+      "extra_bytes": 96,
+      "tipo": "limite_pilha_gcc_com_margem",
+      "heap_dinamico_bytes": 0,
+      "metodo": "GCC estático + fonte/objeto auditados; execução C completa validada neste n"
     },
     {
       "algoritmo": "bitmap",
-      "n": 10000000,
-      "u": 65536,
-      "pico_alocacoes_rastreadas_bytes": 8553,
-      "retido_apos_chamada_bytes": 136,
-      "segundos_rodada_instrumentada": 9.845764223000515,
-      "entrada_bytes": 20000000,
-      "rss_pico_processo_kib": 66468
+      "linguagem": "Python",
+      "n": 100000,
+      "u": 51281,
+      "entrada_bytes": 200000,
+      "extra_bytes": 8553,
+      "tipo": "pico_tracemalloc",
+      "segundos_rodada_instrumentada": 0.12525848299992504,
+      "metodo": "uma execução completa rastreada; entrada/relógio/validação fora; não é RAM total do interpretador"
     },
     {
       "algoritmo": "heap",
+      "linguagem": "C",
       "n": 10000000,
       "u": 65536,
-      "pico_alocacoes_rastreadas_bytes": 380,
-      "retido_apos_chamada_bytes": 88,
-      "segundos_rodada_instrumentada": 905.2580331219997,
       "entrada_bytes": 20000000,
-      "rss_pico_processo_kib": 74396
+      "extra_bytes": 96,
+      "tipo": "limite_pilha_gcc_com_margem",
+      "heap_dinamico_bytes": 0,
+      "metodo": "GCC estático + fonte/objeto auditados; execução C completa validada neste n"
+    },
+    {
+      "algoritmo": "bitmap",
+      "linguagem": "Python",
+      "n": 10000000,
+      "u": 65536,
+      "entrada_bytes": 20000000,
+      "extra_bytes": 8553,
+      "tipo": "pico_tracemalloc",
+      "segundos_rodada_instrumentada": 9.767946248000953,
+      "metodo": "uma execução completa rastreada; entrada/relógio/validação fora; não é RAM total do interpretador"
     }
   ],
-  "pilha_cpython": {
-    "estado": "calculado para o CPython instalado, não medido por tracemalloc",
-    "cabecalho_fonte": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/include/python3.12/internal/pycore_frame.h",
-    "cabecalho_sha256": "23d66ba6ef2936ecca96dc427be5e022712ae25c3f4b3df2abd2ca46b1ee5f39",
-    "ponteiro_bytes": 8,
-    "cabecalho_frame_bytes": 72,
-    "frames": {
-      "heap_unique": {
-        "locais_slots": 6,
-        "pilha_avaliacao_slots": 6,
-        "capacidade_bytes_calculada": 168
-      },
-      "sift": {
-        "locais_slots": 5,
-        "pilha_avaliacao_slots": 4,
-        "capacidade_bytes_calculada": 144
-      }
+  "evidencia_c": {
+    "metodo": "limite estático GCC -fstack-usage dos mesmos objetos usados no teste nativo e na biblioteca; inspeção de fonte e desmontagem",
+    "frames_bytes": {
+      "sift": 32,
+      "heap_unique": 48
     },
-    "caminho_heap_unique_sift_bytes": 312,
-    "limite": "capacidade simultânea dos frames, possivelmente servida de arena já reservada; não inclui objetos referenciados nem toda a pilha nativa; não somar diretamente ao pico de alocações"
+    "pilha_caminho_maximo_bytes": 80,
+    "margem_abi_bytes": 16,
+    "limite_extra_conservador_bytes": 96,
+    "heap_dinamico_bytes": 0,
+    "relatorio_stack_usage": "src/heap.c:5:13:sift\t32\tstatic\nsrc/heap.c:14:8:heap_unique\t48\tstatic\n",
+    "simbolos_externos_nm_u": "",
+    "desmontagem": "\nbuild/heap.o:     file format elf64-x86-64\n\n\nDisassembly of section .text:\n\n0000000000000000 <sift>:\n   0:\t55                   \tpush   %rbp\n   1:\t48 89 e5             \tmov    %rsp,%rbp\n   4:\t41 54                \tpush   %r12\n   6:\t49 89 d4             \tmov    %rdx,%r12\n   9:\t49 d1 ec             \tshr    $1,%r12\n   c:\t53                   \tpush   %rbx\n   d:\t4c 39 e6             \tcmp    %r12,%rsi\n  10:\t73 5c                \tjae    6e <sift+0x6e>\n  12:\t44 0f b7 1c 77       \tmovzwl (%rdi,%rsi,2),%r11d\n  17:\t49 89 f8             \tmov    %rdi,%r8\n  1a:\teb 2e                \tjmp    4a <sift+0x4a>\n  1c:\t0f 1f 40 00          \tnopl   0x0(%rax)\n  20:\t49 8d 74 b0 04       \tlea    0x4(%r8,%rsi,4),%rsi\n  25:\t0f b7 1e             \tmovzwl (%rsi),%ebx\n  28:\t66 39 d9             \tcmp    %bx,%cx\n  2b:\t73 35                \tjae    62 <sift+0x62>\n  2d:\t89 d9                \tmov    %ebx,%ecx\n  2f:\t48 89 f7             \tmov    %rsi,%rdi\n  32:\t4c 01 c0             \tadd    %r8,%rax\n  35:\t4c 89 d6             \tmov    %r10,%rsi\n  38:\t66 41 39 cb          \tcmp    %cx,%r11w\n  3c:\t73 30                \tjae    6e <sift+0x6e>\n  3e:\t66 89 08             \tmov    %cx,(%rax)\n  41:\t66 44 89 1f          \tmov    %r11w,(%rdi)\n  45:\t4c 39 e6             \tcmp    %r12,%rsi\n  48:\t73 24                \tjae    6e <sift+0x6e>\n  4a:\t48 8d 04 36          \tlea    (%rsi,%rsi,1),%rax\n  4e:\t4c 8d 48 01          \tlea    0x1(%rax),%r9\n  52:\t4c 8d 50 02          \tlea    0x2(%rax),%r10\n  56:\t4b 8d 3c 48          \tlea    (%r8,%r9,2),%rdi\n  5a:\t0f b7 0f             \tmovzwl (%rdi),%ecx\n  5d:\t49 39 d2             \tcmp    %rdx,%r10\n  60:\t72 be                \tjb     20 <sift+0x20>\n  62:\t4c 89 ce             \tmov    %r9,%rsi\n  65:\t4c 01 c0             \tadd    %r8,%rax\n  68:\t66 41 39 cb          \tcmp    %cx,%r11w\n  6c:\t72 d0                \tjb     3e <sift+0x3e>\n  6e:\t5b                   \tpop    %rbx\n  6f:\t41 5c                \tpop    %r12\n  71:\t5d                   \tpop    %rbp\n  72:\tc3                   \tret\n  73:\t66 66 2e 0f 1f 84 00 \tdata16 cs nopw 0x0(%rax,%rax,1)\n  7a:\t00 00 00 00 \n  7e:\t66 90                \txchg   %ax,%ax\n\n0000000000000080 <heap_unique>:\n  80:\t48 83 fe 01          \tcmp    $0x1,%rsi\n  84:\t0f 86 a6 00 00 00    \tjbe    130 <heap_unique+0xb0>\n  8a:\t55                   \tpush   %rbp\n  8b:\t48 89 e5             \tmov    %rsp,%rbp\n  8e:\t41 55                \tpush   %r13\n  90:\t49 89 f5             \tmov    %rsi,%r13\n  93:\t41 54                \tpush   %r12\n  95:\t49 89 f4             \tmov    %rsi,%r12\n  98:\t53                   \tpush   %rbx\n  99:\t49 d1 ec             \tshr    $1,%r12\n  9c:\t48 89 fb             \tmov    %rdi,%rbx\n  9f:\t48 83 ec 08          \tsub    $0x8,%rsp\n  a3:\t66 66 2e 0f 1f 84 00 \tdata16 cs nopw 0x0(%rax,%rax,1)\n  aa:\t00 00 00 00 \n  ae:\t66 90                \txchg   %ax,%ax\n  b0:\t49 83 ec 01          \tsub    $0x1,%r12\n  b4:\t4c 89 ea             \tmov    %r13,%rdx\n  b7:\t48 89 df             \tmov    %rbx,%rdi\n  ba:\t4c 89 e6             \tmov    %r12,%rsi\n  bd:\te8 3e ff ff ff       \tcall   0 <sift>\n  c2:\t4d 85 e4             \ttest   %r12,%r12\n  c5:\t75 e9                \tjne    b0 <heap_unique+0x30>\n  c7:\t66 0f 1f 84 00 00 00 \tnopw   0x0(%rax,%rax,1)\n  ce:\t00 00 \n  d0:\t48 83 ea 01          \tsub    $0x1,%rdx\n  d4:\t0f b7 03             \tmovzwl (%rbx),%eax\n  d7:\t31 f6                \txor    %esi,%esi\n  d9:\t48 89 df             \tmov    %rbx,%rdi\n  dc:\t0f b7 0c 53          \tmovzwl (%rbx,%rdx,2),%ecx\n  e0:\t66 89 0b             \tmov    %cx,(%rbx)\n  e3:\t66 89 04 53          \tmov    %ax,(%rbx,%rdx,2)\n  e7:\te8 14 ff ff ff       \tcall   0 <sift>\n  ec:\t48 83 fa 01          \tcmp    $0x1,%rdx\n  f0:\t75 de                \tjne    d0 <heap_unique+0x50>\n  f2:\t48 8d 43 02          \tlea    0x2(%rbx),%rax\n  f6:\t4a 8d 3c 6b          \tlea    (%rbx,%r13,2),%rdi\n  fa:\t66 0f 1f 44 00 00    \tnopw   0x0(%rax,%rax,1)\n 100:\t0f b7 08             \tmovzwl (%rax),%ecx\n 103:\t48 8d 34 12          \tlea    (%rdx,%rdx,1),%rsi\n 107:\t66 3b 4c 53 fe       \tcmp    -0x2(%rbx,%rdx,2),%cx\n 10c:\t74 08                \tje     116 <heap_unique+0x96>\n 10e:\t66 89 0c 33          \tmov    %cx,(%rbx,%rsi,1)\n 112:\t48 83 c2 01          \tadd    $0x1,%rdx\n 116:\t48 83 c0 02          \tadd    $0x2,%rax\n 11a:\t48 39 c7             \tcmp    %rax,%rdi\n 11d:\t75 e1                \tjne    100 <heap_unique+0x80>\n 11f:\t48 83 c4 08          \tadd    $0x8,%rsp\n 123:\t48 89 d0             \tmov    %rdx,%rax\n 126:\t5b                   \tpop    %rbx\n 127:\t41 5c                \tpop    %r12\n 129:\t41 5d                \tpop    %r13\n 12b:\t5d                   \tpop    %rbp\n 12c:\tc3                   \tret\n 12d:\t0f 1f 00             \tnopl   (%rax)\n 130:\t48 89 f0             \tmov    %rsi,%rax\n 133:\tc3                   \tret\n",
+    "objeto_sha256": "4ff96225b381e390afb38439eea3c5e19b2ca36561fcff5a847eb2c20ebf61a7",
+    "biblioteca_sha256": "9f910cb9d015589d94c67aaedad3df40ae1b36a808999a995cc840534278678d",
+    "compilador": "gcc (Debian 14.2.0-19) 14.2.0",
+    "flags": [
+      "-std=c11",
+      "-O3",
+      "-Wall",
+      "-Wextra",
+      "-Wpedantic",
+      "-Werror",
+      "-fno-inline",
+      "-fno-omit-frame-pointer",
+      "-mno-red-zone",
+      "-fno-tree-loop-distribute-patterns",
+      "-fno-ipa-cp",
+      "-fstack-usage",
+      "-fPIC"
+    ],
+    "escopo": "somente heap_unique e sift em C; independe de n; exclui chamador de testes, ctypes e Python; refazer para outra ABI/compilador/flags"
   },
-  "analise_frames_utc": "2026-11-09T14:11:29.522249+00:00"
+  "nota": "C: limite de pilha do compilador, não pico de tracemalloc. Python: pico de alocações rastreadas. Não somar com RSS nem contar infraestrutura como firmware."
 }

@@ -1,56 +1,62 @@
 [
   {
     "algoritmo": "heap",
+    "linguagem": "C",
     "n": 1000,
     "u": 996,
-    "mediana_s": 0.002395203,
-    "min_s": 0.0022921,
-    "max_s": 0.00262238,
+    "mediana_s": 4.4606e-05,
+    "min_s": 3.7616e-05,
+    "max_s": 5.0505e-05,
     "entrada_bytes": 2000
   },
   {
     "algoritmo": "bitmap",
+    "linguagem": "Python",
     "n": 1000,
     "u": 996,
-    "mediana_s": 0.000160769,
-    "min_s": 0.000159056,
-    "max_s": 0.000187518,
+    "mediana_s": 0.000161649,
+    "min_s": 0.000160067,
+    "max_s": 0.000269899,
     "entrada_bytes": 2000
   },
   {
     "algoritmo": "heap",
+    "linguagem": "C",
     "n": 100000,
     "u": 51281,
-    "mediana_s": 0.458691885,
-    "min_s": 0.44950735,
-    "max_s": 0.466493628,
+    "mediana_s": 0.008541893,
+    "min_s": 0.008051828,
+    "max_s": 0.010235509,
     "entrada_bytes": 200000
   },
   {
     "algoritmo": "bitmap",
+    "linguagem": "Python",
     "n": 100000,
     "u": 51281,
-    "mediana_s": 0.015329611,
-    "min_s": 0.014332772,
-    "max_s": 0.015340867,
+    "mediana_s": 0.014613934,
+    "min_s": 0.014425276,
+    "max_s": 0.015010522,
     "entrada_bytes": 200000
   },
   {
     "algoritmo": "heap",
+    "linguagem": "C",
     "n": 10000000,
     "u": 65536,
-    "mediana_s": 70.117607581,
-    "min_s": 67.930714046,
-    "max_s": 72.47676382,
+    "mediana_s": 2.09228231,
+    "min_s": 2.000066697,
+    "max_s": 2.513516585,
     "entrada_bytes": 20000000
   },
   {
     "algoritmo": "bitmap",
+    "linguagem": "Python",
     "n": 10000000,
     "u": 65536,
-    "mediana_s": 1.04161097,
-    "min_s": 0.973066785,
-    "max_s": 1.057750567,
+    "mediana_s": 1.01750775,
+    "min_s": 0.986791676,
+    "max_s": 1.092296182,
     "entrada_bytes": 20000000
   }
 ]

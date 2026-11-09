@@ -2,3 +2,5 @@ __pycache__/
 *.pyc
 .venv/
 entrega.zip
+
+projeto/build/

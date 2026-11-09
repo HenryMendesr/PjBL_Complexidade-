@@ -38,7 +38,7 @@ Se uma análise prova no máximo n log₂n operações, ela fornece O(n log n). 
 
 Melhor caso é a entrada mais favorável; pior é a mais desfavorável; caso médio exige dizer qual distribuição de entradas ou escolhas aleatórias está sendo considerada. Sem essa hipótese, uma média universal não está definida.
 
-Big-O não fornece segundos. Um modelo T=c·f(n) só vira uma estimativa numérica quando declaramos c. Nos gráficos das oito alternativas, c=10⁻⁹ s por operação nominal é uma hipótese otimista de representação compacta. Não é uma medição de Python e não foi calibrado por benchmark dessas oito estratégias.
+Big-O não fornece segundos. Um modelo T=c·f(n) só vira uma estimativa numérica quando declaramos c. Nos gráficos das oito alternativas, c=10⁻⁹ s por operação nominal é uma hipótese otimista de representação compacta. Não é uma medição de C ou Python e não foi calibrado por benchmark dessas oito estratégias.
 
 ## 4. Força bruta: de onde vem o quadrático?
 
@@ -82,7 +82,7 @@ Depois fazemos n−1 extrações. Trocamos o máximo da raiz com a última posi�
 
 Com chaves distintas, o caso médio sobre permutações uniformes e o pior caso genérico têm Θ(n log n). Com todos iguais, a descida para cedo e o total dessa implementação é Θ(n). Não se deve apresentar Θ(n log n) como tempo de toda entrada, nem aplicar o argumento de n chaves distintas quando n>D.
 
-A profundidade de chamadas é constante porque sift usa laço, não recursão. Isso reduz espaço auxiliar, mas não prova 256 bytes em Python: os índices, iteradores, objetos e estruturas de execução também têm custo.
+A profundidade de chamadas é constante porque sift usa laço, não recursão. Na versão atual em C, o compilador fornece frames static de 48 B e 32 B. Somar o caminho e a margem de 16 B dá 96 B. O significado de O(1) não forneceu sozinho esse número: o build foi auditado.
 
 ## 6. Bitmap: a conta dos 8192 bytes e os índices
 
@@ -226,21 +226,27 @@ Construir todas as comparações custa Θ(n²), inclusive com todos os valores i
 
 ## 13. Como ler nossos números reais
 
-Os dados estão em [resumo.json](../projeto/dados/resumo.json) e o ambiente em [ambiente.json](../projeto/dados/ambiente.json). Na coleta Python atual, para n=10⁷:
+Os dados estão em [resumo.json](../projeto/dados/resumo.json), a memória e evidências em [memoria.json](../projeto/dados/memoria.json) e o ambiente em [ambiente.json](../projeto/dados/ambiente.json). A versão atual é mista: Heap Sort em C e bitmap em Python. Para n=10⁷:
 
-| Medida | Heap Sort | Bitmap |
+| Medida | Heap Sort C | Bitmap Python |
 |---|---|---|
-| Mediana de tempo | 70,117608 s | 1,041611 s |
-| Menor tempo | 67,930714 s | 0,973067 s |
-| Maior tempo | 72,476764 s | 1,057751 s |
+| Mediana de tempo | 2,092282 s | 1,017508 s |
+| Menor tempo | 2,000067 s | 0,986792 s |
+| Maior tempo | 2,513517 s | 1,092296 s |
 
-A mediana é o valor central dos três tempos ordenados. Os extremos mostram a dispersão observada; não são intervalo de confiança. Há um aquecimento antes das três rodadas.
+A mediana é o valor central dos três tempos ordenados. Os extremos mostram dispersão observada, não intervalo de confiança. Há um aquecimento antes das três rodadas. A razão das medianas é aproximadamente 2,06: nesta coleta grande, o bitmap levou cerca de 2,06 vezes menos tempo. Isso não é uma razão universal nem isola o efeito do algoritmo, porque as linguagens são diferentes. Nos vetores menores, Heap Sort C foi mais rápido; constantes e custo do interpretador também importam.
 
-Nesta entrada e máquina, 70,117607581/1,041610970≈67,32. Portanto o bitmap teve tempo mediano cerca de 67 vezes menor que o Heap Sort. Isso não é uma razão universal de velocidade, nem uma promessa para outro computador.
+O payload da entrada em n=10⁷ é 2n=20000000 B, aproximadamente 19,07 MiB. O array do teste compartilha seu buffer com a função C sem copiar; a preparação do ponteiro acontece antes do cronômetro. O tempo C inclui a chamada via ctypes e seu custo de conversão/retorno, relevante nas escalas pequenas. Não se subtrai uma estimativa desse custo. Geração, cópia, validação e impressão ficam fora; inicialização do bitmap e compactação ficam dentro.
 
-O payload de entrada em n=10⁷ é 2n=20000000 B, aproximadamente 19,07 MiB. Cópias, set/dict de validação, objeto do array e interpretador pertencem à infraestrutura. O tempo da função exclui geração, cópia, validação e impressão, mas inclui inicializar o bitmap e compactar.
+| n | Heap C: limite GCC + margem (B) | Bitmap Python: pico rastreado (B) |
+|---|---|---|
+| 1000 | 96 | 8553 |
+| 100000 | 96 | 8553 |
+| 10000000 | 96 | 8553 |
 
-A primeira amostra tracemalloc foi separada do tempo e feita em n=1000: 380 B para heap e 8553 B para bitmap. A coleta foi ampliada para uma execução completa de cada algoritmo nas três escalas; os seis registros estão em [memoria.json](../projeto/dados/memoria.json). Para heap, 380−256=124 B acima do teto, ou 48,4375% a mais. Essas são alocações rastreadas, não toda a memória interna do interpretador. A amostra já não atende ao limite; não se deve apresentar a solução Python como aprovada para Embarca. A curva atual usa os seis registros reais. Ter três tamanhos medidos não demonstra todos os casos possíveis nem um limite de RAM total.
+Os métodos são diferentes: para C, 96 B é um limite estático do objeto com margem, que independe de n e foi acompanhado de execução correta nos três tamanhos; não é pico de tracemalloc. Para Python, 8553 B é o pico observado em uma execução completa rastreada por tamanho, não toda a RAM do interpretador. Nenhum dos valores é o RSS do processo inteiro.
+
+A recomendação Embarca agora se refere ao núcleo C, capaz de executar sem Python. A ponte de testes heap.py não faz parte do firmware. O limite 96≤256 foi comprovado no GCC/x86-64 e flags registrados. Para outro compilador/ABI, repetir a auditoria. O tempo de dois segundos pertence a Datacenter; o Heap Sort C ter mediana acima de dois segundos não viola um prazo inexistente da Embarca.
 
 ## 14. O que significa o eixo E dos gráficos completos?
 
@@ -253,39 +259,74 @@ Na faixa prática, o eixo mostra segundos em escala logarítmica. No gráfico co
 | 3 | 1000 s |
 | 1000 | 10¹⁰⁰⁰ s, não 1000 s |
 
-O eixo de expoentes é comprimido para mostrar curvas astronomicamente grandes sem overflow. Memória usa a mesma ideia com bytes. Linhas tracejadas são modelos nominais; pontos e linhas contínuas identificam tempos Python medidos. As constantes dos modelos não autorizam dizer que hash ou árvore em Python executariam naqueles segundos.
+O eixo de expoentes é comprimido para mostrar curvas astronomicamente grandes sem overflow. Memória usa a mesma ideia com bytes. Linhas tracejadas são modelos nominais; pontos e linhas contínuas identificam tempos das implementações C/Python medidos. As constantes dos modelos não autorizam dizer que hash ou árvore em Python executariam naqueles segundos.
 
 ## 15. Como concluir sem exagerar a evidência
 
-O bitmap é a recomendação técnica para Datacenter pelo domínio conhecido, exatidão e trabalho linear; a mediana local ficou abaixo de dois segundos. A confirmação formal depende da máquina da disciplina. Heap Sort mostra ordenação e compactação com poucos dados auxiliares, mas os 256 B não foram atendidos na amostra Python. A escolha da linguagem facilita a defesa da equipe, porém não elimina essa restrição.
+O bitmap é a recomendação Datacenter pelo domínio conhecido, exatidão e trabalho linear; a mediana local ficou abaixo de dois segundos. A confirmação formal depende da máquina da disciplina. Heap Sort C ordena e compacta no próprio vetor e tem limite conservador local de 96 B, abaixo dos 256 B da Embarca. O programa C nativo de testes executa sem interpretador; a demonstração Python é apenas infraestrutura.
 
-Aprovação do par, aceitação da linguagem diante das menções a Pascal e defesa oral dos integrantes são questões externas. Nenhuma conta ou teste local substitui essas confirmações.
+Aprovação do par, confirmação da interpretação de linguagem diante das menções a Pascal e defesa oral dos integrantes são questões externas. Um alvo embarcado diferente do build avaliado também precisa de auditoria própria. Não se inventa aprovação ou teste de uma placa não fornecida.
 
-## Resultados da coleta ampliada de memória
+## 16. Pilha de C: como provar 96 B incluindo chamadas?
 
-| n | Heap: pico rastreado (B) | Bitmap: pico rastreado (B) |
+O compilador pode guardar uma variável em registrador, fazer spill na pilha ou reservar espaço de alinhamento. Por isso somar sizeof das variáveis do texto não basta. Usamos GCC com -fstack-usage nos objetos realmente ligados ao teste nativo e à biblioteca.
+
+| Função | Frame reportado | Profundidade simultânea |
 |---|---|---|
-| 1000 | 380 | 8553 |
-| 100000 | 380 | 8553 |
-| 10000000 | 380 | 8553 |
+| heap_unique | 48 B, static | Ativo enquanto sift executa |
+| sift | 32 B, static | Não chama outra função e não é recursivo |
 
-Cada ponto veio de uma execução completa, com entrada, relógio e validação fora do rastreamento. Os três tamanhos apresentarem o mesmo pico é uma observação dessas entradas e desse interpretador; não é uma prova para todo n e toda distribuição. É compatível com poucos temporários e nenhuma estrutura auxiliar proporcional a n. Constante em n ainda pode exceder 256 B.
+O caminho mais profundo é heap_unique → sift: 48+32=80 B. Acrescentamos uma margem conservadora de 16 B na fronteira de chamada/ABI: 80+16=96 B. A folga para o requisito é 256−96=160 B. Esse cálculo já inclui os frames das duas funções e o contexto que o compilador efetivamente guardou na pilha; variáveis mantidas em registradores não alocam RAM extra.
 
-A duração da rodada instrumentada do heap em n=10⁷ foi cerca de 905 s; o custo do rastreamento não deve ser confundido com a mediana sem rastreamento de 70,117608 s. Os arquivos de tempo não foram alterados por essa coleta de memória.
+O objeto não tem símbolos externos em nm -u. A fonte e a desmontagem não contêm chamadas de alocação ou recursão; não há vetor auxiliar nem cópia da entrada no algoritmo. O heap dinâmico é zero. As saídas brutas de .su e objdump, hashes e flags estão em memoria.json, e os artefatos podem ser regenerados pelo script de compilação.
 
-## 16. Pilha do Python: por que tracemalloc não é a conta completa?
+`static` no relatório .su significa que o tamanho do frame é determinado estaticamente: ele não cresce com n. Não significa que medimos apenas n=1000 e supusemos o restante. O mesmo caminho de chamadas e os mesmos frames valem para os três tamanhos e para qualquer vetor válido suportado por esse build.
 
-tracemalloc registra alocações rastreadas feitas durante uma janela. A função também ocupa espaço de execução nos frames do interpretador, que podem ser servidos por uma arena já reservada. Esse espaço pode não aparecer como nova alocação dentro da janela. Por isso reduzir o pico rastreado abaixo de 256 B, se isso fosse obtido, não bastaria para certificar a memória total incluindo a pilha.
+O alvo da prova é somente o núcleo C. A infraestrutura Python/ctypes, o programa de testes com suas referências e a memória do chamador ficam fora da função embarcada. O núcleo também foi ligado a um executável C de testes sem Python, usando o mesmo heap.o, para mostrar essa separação. No firmware real, o chamador e interrupções precisam de reserva própria; o enunciado já pressupõe o vetor de entrada residente.
 
-No CPython 3.12 instalado, o cabeçalho interno `pycore_frame.h` descreve um frame com cabeçalho de 72 B e slots de 8 B. O cálculo foi conferido contra o layout instalado, cujo hash está em memoria.json. As duas funções não possuem closures.
+A comprovação é local ao GCC/x86-64 e flags registrados. Com outro alvo, não transportar automaticamente o número 96: recompilar, inspecionar os novos frames e verificar novamente o caminho. O código de máquina do algoritmo e arquivos de programa não são tratados como RAM auxiliar de trabalho.
 
-| Função | Slots locais | Slots de avaliação | Conta da capacidade | Total |
-|---|---|---|---|---|
-| heap_unique | 6 | 6 | 72+8×(6+6) | 168 B |
-| sift | 5 | 4 | 72+8×(5+4) | 144 B |
+## 17. Introdução ao código C para quem conhece Python
 
-Durante uma descida, heap_unique continua ativo enquanto sift executa. Os dois frames coexistem: 168+144=312 B. Essa capacidade de armazenamento simultâneo já supera 256 B, antes dos objetos dos inteiros e de outros custos de execução. É uma conta do layout desta versão do CPython e destas funções; não é uma medição de RSS e não significa 312 B de novas alocações a cada chamada.
+O código de produção tem duas funções pequenas em [heap.c](../projeto/src/heap.c). A estrutura lógica é a mesma já estudada no roteiro; o que muda são os tipos e algumas formas de escrever os laços.
 
-Os 312 B calculados e os 380 B rastreados em n=1000 são evidências diferentes. Não somamos ambos para anunciar um suposto total de 692 B, porque os métodos não fornecem uma decomposição completa e sem sobreposição. Ambos mostram por que a versão atual não está certificada para Embarca, sem inventar uma conta exata da RAM total.
+| Escrita em C | Como entender |
+|---|---|
+| uint16_t | Inteiro sem sinal de 16 bits, adequado aos valores 0–65535 |
+| size_t | Tipo sem sinal usado para tamanhos e índices; no build atual tem 64 bits. u pode chegar a 65536, que não caberia em uint16_t |
+| uint16_t *a | Ponteiro ao primeiro elemento de um vetor de leituras; a[i] acessa o elemento i |
+| size_t n | Quantidade de elementos, não quantidade de bytes |
+| static void sift(...) | Função auxiliar interna ao arquivo; modifica o vetor e não devolve valor |
+| size_t heap_unique(...) | Função pública que modifica o vetor e devolve a quantidade de únicos |
+| ++i / --i | Incrementar/decrementar o índice |
+| a[u++] = a[i] | Escrever no índice u atual e depois incrementar u |
+| return u | Devolver a quantidade; os elementos da resposta já estão no vetor |
 
-O código de diagnóstico é Python e usa ctypes para calcular o alinhamento do layout e os atributos do objeto de código para contar slots. Isso serve apenas à instrumentação; as funções de deduplicação continuam simples e não importam ctypes. Em outras versões do interpretador ou quando o cabeçalho não está disponível, o cálculo deve ser tratado como não verificável automaticamente. A coleta de tracemalloc continua válida com suas limitações.
+### Ler sift em quatro passos
+
+1. `root < end/2` identifica um nó que ainda tem filho. end é o tamanho exclusivo do heap ativo. A condição também mantém o cálculo do filho dentro do intervalo, sem overflow para um vetor válido.
+2. `child = 2*root+1` localiza o filho esquerdo. Só acessamos o direito se `child+1 < end`; se ele for maior, passamos a escolhê-lo.
+3. Se `a[root] >= a[child]`, a propriedade de heap já vale e o laço termina. Caso contrário, um temporário uint16_t permite trocar os valores sem perder nenhum.
+4. `root = child` continua a descida. A possível violação só desce, então o procedimento termina quando encontra posição correta ou folha.
+
+### Ler heap_unique em quatro passos
+
+1. Se n<2, retorna imediatamente n. Isso permite NULL quando n=0, sem acessar a[0].
+2. O laço de construção começa em n/2 e chama sift para i−1. O teste i>0 ocorre antes da subtração. Isso evita o erro clássico de usar i>=0 com um inteiro sem sinal, que nunca se torna negativo.
+3. O laço de extração diminui end, troca raiz e última posição ativa e restaura o heap do prefixo. O sufixo ordenado cresce.
+4. A compactação começa com u=1 porque sabemos que n≥2. Compara cada leitura ao último emitido a[u−1], escreve só se for diferente e devolve u.
+
+Não há malloc, conjunto, tabela ou recursão nessas duas funções. Em testes/nativo.c há malloc e referências para conferir respostas: esse programa é infraestrutura, não a função sob orçamento. O mesmo vale para o adaptador Python: ele cria uma visão sobre o buffer para chamar C, mas não executa outra deduplicação.
+
+### Compilar e demonstrar
+
+```sh
+python3 projeto/scripts/compilar.py --sanitizers
+./projeto/build/test_nativo
+python3 projeto/tests/test.py
+python3 projeto/src/main.py heap 3 1 3 0 65535
+```
+
+O script de compilação é Python e mostra um caminho único para quem ainda está aprendendo GCC. `-O3` ativa otimização; `-Wall -Wextra -Wpedantic -Werror` exigem compilação sem avisos; `-fstack-usage` gera a evidência de pilha. As demais opções fixam condições de auditoria no ambiente x86-64, como não usar red zone e não inlinear funções. `-fPIC` permite usar o mesmo objeto na biblioteca compartilhada do teste. Essas flags não são uma receita universal para toda placa embarcada.
+
+O build com sanitizadores é separado e serve para procurar acessos inválidos e comportamento indefinido. Seus frames e tempos não são usados para provar os 96 B do build otimizado. `heap.py` usa ctypes para ligar a demonstração ao C; o dispositivo pode ligar diretamente heap.o a um programa C e não precisa de Python.

@@ -1,51 +1,45 @@
-# Checklist da entrega Python
+# Checklist da entrega — C e Python
 
-## Como usar a pasta Estudos
+## Como estudar
 
-1. Ler [Matematica.md](Matematica.md) para entender os símbolos, somatórios, probabilidades e conversões. Refazer os exemplos pequenos antes de estudar números astronômicos.
-2. Ensaiar [apresentacao.md](apresentacao.md), acompanhando os algoritmos na entrada [3,1,3,0,65535]. O roteiro separa falas principais, cálculos e respostas de reserva.
-3. Conferir abaixo quais itens têm evidência e quais permanecem parciais ou pendentes.
+1. Ler [Matematica.md](Matematica.md) para refazer as contas. As seções 16 e 17 explicam a pilha e o código C para quem conhece Python.
+2. Ensaiar [apresentacao.md](apresentacao.md), acompanhando as duas estratégias na entrada [3,1,3,0,65535].
+3. Conferir os métodos usados para cada cliente: limite estático GCC para o núcleo C e pico rastreado para o bitmap Python. Não misturar nenhum deles com RSS.
 
-Os documentos desta pasta são material de apoio. Eles não alteram as medições nem substituem o relatório da entrega.
+O projeto contém exatamente duas estratégias de deduplicação. A ponte heap.py não é uma terceira solução; só chama heap.c compartilhando o vetor da infraestrutura.
 
-## Situação dos requisitos
+## Atendimento ao enunciado
 
-| Item | Situação |
+| Requisito | Evidência e situação |
 |---|---|
-| Dez estratégias analisadas e quatro contas de inviabilidade | Presente na análise e no relatório |
-| Exatamente duas estratégias implementadas | heap.py e bitmap.py |
-| Domínio 0–65535, vetor vazio, extremos, distintos e repetições | Testes com referência independente |
-| n=1000,100000,10000000 | Coleta real com validação após cada rodada |
-| Tempo separado de geração, cópia e validação | perf_counter_ns em torno da função |
-| Oito extrapolações comparadas às duas medidas | Figuras individuais com legenda explícita |
-| Memória rastreada, frames e entrada separados | Seis amostras tracemalloc em memoria.json, capacidade dos frames calculada separadamente e 2n bytes de payload de entrada |
-| Embarca: garantia de no máximo 256 B extras | NÃO atendida na amostra: Heap Sort teve 380 B rastreados; não usar evidência antiga de C |
-| Memória rastreada nas três escalas | Uma execução completa por algoritmo/n; não é contagem de toda a memória do interpretador ou garantia universal |
-| Datacenter: menos de 2 s na máquina da disciplina | Pendente; a medição disponível é local |
-| Linguagem Python e par aprovados pelo professor | Pendente de confirmação |
-| Relatório PDF, fonte editável e instruções | Presentes em projeto/ e no README da raiz |
+| Dez análises e quatro cálculos de inviabilidade | Presentes na análise teórica e relatório |
+| Duas implementações | Heap Sort/compactação em src/heap.c e bitmap em src/bitmap.py |
+| Corretude, vazio e extremos | Testes Python com referência independente; 3294 casos C nativos, NULL/0, resposta conhecida e sentinelas |
+| Ordenados, inversos, iguais e aleatórios | Teste C nas três escalas, domínio completo e enumeração pequena |
+| n=1000,100000,10000000 | Novas rodadas híbridas reais, com validação após cada execução |
+| Memória Embarca ≤256 B extras | Atendido no build local: frames GCC 48+32=80 B, mais margem de 16 B, total 96 B; sem heap dinâmico, recursão ou cópia |
+| Evidência de memória por tamanho | Três execuções C com o mesmo limite estático válido para todo n; três execuções completas Python com tracemalloc |
+| Separar recursos | Pilha/heap C, alocações rastreadas Python, entrada e RSS explicitados separadamente |
+| Tempo isolado de preparação/validação | perf_counter_ns; preparação de ponteiro fora; custo da chamada ctypes incluído no tempo C |
+| Aquecimento, repetições e dispersão | Um aquecimento e três tempos por combinação; mediana, mínimo e máximo |
+| Oito extrapolações | Modelos nominais identificados nos gráficos; não são medições das oito alternativas |
+| Datacenter em <2 s na referência | Resultado local abaixo de 2 s; referência da disciplina ainda pendente |
+| Linguagem e aprovação do par | C/Python são recomendados no PDF, que também cita Pascal; confirmação dessa divergência e aprovação do par ainda pendentes |
+| Relatório, fontes e instruções | PDF, Markdown, scripts e README presentes |
+| Código C utilizável sem Python | Teste nativo ligado ao mesmo heap.o; a ponte Python é infraestrutura do computador |
 
-Todos os programas são Python. Estudos contém apenas apoio; a pasta projeto contém os itens da entrega. A migração privilegia a linguagem conhecida pela equipe e não declara satisfeitas as restrições que não foram comprovadas.
+## Resposta à revisão recebida
 
-## Conferência antes da apresentação
+A crítica ao orçamento físico era correta. A solução atual mudou o núcleo embarcado para C e refez a coleta, em vez de apenas registrar a falha. A comprovação vale para o build GCC/x86-64 registrado em memoria.json; não equivale a teste de uma placa desconhecida. Outro compilador ou ABI exige refazer a análise de pilha.
 
-- Abrir os seis gráficos individuais e identificar corretamente os dois algoritmos medidos e as oito alternativas modeladas.
-- Mostrar as três escalas no resumo de dados, sem misturar os tempos atuais de Python com os da versão antiga.
-- Mostrar as três escalas de memória e explicar por que picos rastreados e capacidade dos frames são evidências separadas. Os 380 B em n=1000 já excedem 256 B.
-- Conferir o contrato de prefixo: só a[0:u] é a resposta.
-- Testar a demonstração pequena no computador da apresentação; preparar os gráficos se não houver tempo para rodar o benchmark inteiro.
-- Usar a tabela atual de dados caso uma nova coleta tenha sido realizada.
-- Tratar aprovação do professor e prazo na referência como pendências, não como fatos presumidos.
+O prazo de dois segundos pertence a Datacenter. A mediana do Heap Sort C acima de dois segundos é relatada, mas não viola uma exigência temporal inexistente para Embarca. A escolha C é sustentada pela RAM. O bitmap Python atende à mediana local de tempo; a validação formal continua dependente da máquina da disciplina.
 
-## Análise da revisão recebida
+## Antes da apresentação
 
-A revisão externa apontou corretamente que a entrega não podia ser considerada 100% conforme: o limite Embarca já havia falhado e a memória estava medida apenas em n=1000. A medição foi ampliada para as três escalas. O ponto dos 256 B continua sendo uma restrição não atendida pela versão Python atual; ele não vira «resolvido» por medir mais entradas.
-
-| Sugestão da revisão | Encaminhamento |
-|---|---|
-| Resolver 256 B, possivelmente usando C | A equipe confirmou manter tudo em Python. A versão atual não é certificada; a capacidade calculada dos frames já excede 256 B no CPython instalado. Qualquer futura solução deve medir também a pilha, não apenas tentar reduzir o indicador de tracemalloc |
-| Medir memória nos três tamanhos | Coleta separada dos tempos, com a função completa e validação independente após o rastreamento |
-| Confirmar linguagem e aprovação do par | Dependem do professor. Aceitar Python como linguagem não significa dispensar os 256 B |
-| Testar na máquina de referência | Pendente. A mediana de 1,04 s é evidência local do bitmap, não certificação externa |
-
-Heap Sort é uma técnica de baixo espaço auxiliar no modelo de palavras, mas isso não torna automaticamente uma implementação CPython adequada a uma restrição física de 256 B. A recomendação Datacenter permanece baseada no domínio e nas medições locais. A implementação Embarca permanece demonstrativa enquanto não cumprir a restrição.
+- Compilar com `python3 projeto/scripts/compilar.py --sanitizers`.
+- Executar `./projeto/build/test_nativo` para mostrar o teste C sem interpretador.
+- Executar os exemplos pequenos e abrir os seis gráficos individuais.
+- Mostrar 48+32+16=96 B e explicar por que isso não é soma incompleta de sizeof nem pico de tracemalloc.
+- Mostrar os dados atuais de C/Python, sem usar os antigos tempos de Heap Sort Python.
+- Explicar que as linguagens diferentes influenciam a comparação de tempos; a razão medida não isola o algoritmo.
+- Conferir o prefixo válido a[0:u], as pendências do professor e o escopo local da evidência.

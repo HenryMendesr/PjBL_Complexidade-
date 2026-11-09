@@ -1,8 +1,14 @@
+Compilação e testes C (comando executado: python3 projeto/scripts/compilar.py --sanitizers)
+OK C: 3294 casos, NULL/0, resposta conhecida e sentinelas.
+OK C: 3294 casos, NULL/0, resposta conhecida e sentinelas.
+Biblioteca C compilada; teste nativo independente de Python aprovado.
+
+Integração Python e referência independente (python3 projeto/tests/test.py)
 test_domain (__main__.Corretude.test_domain) ... ok
 test_examples (__main__.Corretude.test_examples) ... ok
 test_exhaustive (__main__.Corretude.test_exhaustive) ... ok
 
 ----------------------------------------------------------------------
-Ran 3 tests in 0.768s
+Ran 3 tests in 0.109s
 
 OK

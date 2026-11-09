@@ -1,30 +1,25 @@
-def sift(a, root, end):
-    while root < end // 2:
-        child = 2 * root + 1
-        if child + 1 < end and a[child] < a[child + 1]:
-            child += 1
-        if a[root] >= a[child]:
-            break
-        temp = a[root]
-        a[root] = a[child]
-        a[child] = temp
-        root = child
+import ctypes
+from array import array
+from functools import partial
+from pathlib import Path
+
+_library = None
+
+
+def prepare_heap(a):
+    global _library
+    if not isinstance(a,array) or a.typecode!='H' or a.itemsize!=2:
+        raise TypeError("A entrada deve ser array('H') com elementos de 2 bytes.")
+    if _library is None:
+        path=Path(__file__).resolve().parents[1]/'build/libheap.so'
+        if not path.exists():
+            raise RuntimeError('Compile primeiro: python3 projeto/scripts/compilar.py')
+        _library=ctypes.CDLL(str(path))
+        _library.heap_unique.argtypes=[ctypes.POINTER(ctypes.c_uint16),ctypes.c_size_t]
+        _library.heap_unique.restype=ctypes.c_size_t
+    view=(ctypes.c_uint16*len(a)).from_buffer(a)
+    return partial(_library.heap_unique,view,len(a))
 
 
 def heap_unique(a):
-    n = len(a)
-    if n < 2:
-        return n
-    for i in range(n // 2 - 1, -1, -1):
-        sift(a, i, n)
-    for end in range(n - 1, 0, -1):
-        temp = a[0]
-        a[0] = a[end]
-        a[end] = temp
-        sift(a, 0, end)
-    u = 1
-    for i in range(1, n):
-        if a[i] != a[u - 1]:
-            a[u] = a[i]
-            u += 1
-    return u
+    return prepare_heap(a)()
