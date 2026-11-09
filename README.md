@@ -15,7 +15,7 @@ MPLCONFIGDIR=/tmp/pjbl-mpl python3 projeto/scripts/documentos.py
 
 Os experimentos executam n=1000,100000,10000000 com um aquecimento e três repetições por algoritmo. Heap Sort em Python pode demorar vários minutos no maior tamanho. A geração, cópia e validação ficam fora do tempo. Nova coleta substitui os dados correntes; os resultados presentes são reais desta versão Python.
 
-[Relatório](projeto/relatorio.pdf) · [Análise teórica](projeto/docs/analise_teorica.md) · [Roteiro](Estudos/apresentacao.md)
+[Relatório](projeto/relatorio.pdf) · [Análise teórica](projeto/docs/analise_teorica.md) · [Roteiro explicado](Estudos/apresentacao.md) · [Contas passo a passo](Estudos/Matematica.md) · [Guia de estudo e checklist](Estudos/Checklist.md)
 
 **Limitações:** a amostra de Heap Sort em CPython apresentou 380 B de alocações rastreadas, acima dos 256 B da Embarca; essa restrição não foi atendida no ensaio. O par e a linguagem precisam ser confirmados com o professor diante das menções a Pascal. Resultados locais não certificam os 2 s na máquina da disciplina. O relatório distingue o que foi efetivamente medido das hipóteses dos modelos.
 
