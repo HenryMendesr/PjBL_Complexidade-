@@ -1,4 +1,4 @@
-# Checklist da entrega — C e Python
+# Checklist da entrega: C e Python
 
 ## Como estudar
 
@@ -17,7 +17,7 @@ O projeto contém exatamente duas estratégias de deduplicação. A ponte heap.p
 | Corretude, vazio e extremos | Testes Python com referência independente; 3294 casos C nativos, NULL/0, resposta conhecida e sentinelas |
 | Ordenados, inversos, iguais e aleatórios | Teste C nas três escalas, domínio completo e enumeração pequena |
 | n=1000,100000,10000000 | Novas rodadas híbridas reais, com validação após cada execução |
-| Memória Embarca ≤256 B extras | Atendido no build local: frames GCC 48+32=80 B, mais margem de 16 B, total 96 B; sem heap dinâmico, recursão ou cópia |
+| Memória Embarca ≤256 B extras | Atendido na compilação local: quadros de pilha GCC 48+32=80 B, mais margem de 16 B, total 96 B; sem memória dinâmica, recursão ou cópia |
 | Evidência de memória por tamanho | Três execuções C com o mesmo limite estático válido para todo n; três execuções completas Python com tracemalloc |
 | Separar recursos | Pilha/heap C, alocações rastreadas Python, entrada e RSS explicitados separadamente |
 | Tempo isolado de preparação/validação | perf_counter_ns; preparação de ponteiro fora; custo da chamada ctypes incluído no tempo C |
@@ -30,7 +30,7 @@ O projeto contém exatamente duas estratégias de deduplicação. A ponte heap.p
 
 ## Resposta à revisão recebida
 
-A crítica ao orçamento físico era correta. A solução atual mudou o núcleo embarcado para C e refez a coleta, em vez de apenas registrar a falha. A comprovação vale para o build GCC/x86-64 registrado em memoria.json; não equivale a teste de uma placa desconhecida. Outro compilador ou ABI exige refazer a análise de pilha.
+A crítica ao orçamento físico era correta. A solução atual mudou o núcleo embarcado para C e refez a coleta, em vez de apenas registrar a falha. A comprovação vale para a compilação com GCC para x86-64 registrada em memoria.json; não equivale a teste de uma placa desconhecida. Outro compilador ou ABI exige refazer a análise de pilha.
 
 O prazo de dois segundos pertence a Datacenter. A mediana do Heap Sort C acima de dois segundos é relatada, mas não viola uma exigência temporal inexistente para Embarca. A escolha C é sustentada pela RAM. O bitmap Python atende à mediana local de tempo; a validação formal continua dependente da máquina da disciplina.
 

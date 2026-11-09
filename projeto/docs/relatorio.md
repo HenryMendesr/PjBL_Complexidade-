@@ -6,17 +6,17 @@ Integrantes: Henry Rodrigues, Rafael Maluf e Matheus.
 
 O domínio tem D=65536 valores (0 a 65535). n é a quantidade de leituras e u a quantidade de distintos: 0≤u≤min(n,D). Se n>D, necessariamente existem repetições, mas não necessariamente todos os D valores. A entrada do Heap Sort C é um ponteiro uint16_t* e um tamanho size_t; o bitmap Python recebe array('H'), de 2 bytes por elemento. Nos experimentos, o buffer do array é compartilhado com C sem cópia por ctypes. As funções modificam a entrada e retornam u; apenas a[0:u] é a saída válida. Heap devolve ordem crescente; bitmap mantém primeiras ocorrências. A entrada vazia retorna zero. São exatamente duas estratégias implementadas; conjuntos e ordenação nativa aparecem somente na infraestrutura de validação.
 
-Embarca permite 256 bytes extras ao vetor já residente, incluindo a pilha das funções. Datacenter exige n=10⁷ em menos de 2 s na máquina da disciplina. A solução Embarca foi implementada em C para atender ao orçamento físico; o bitmap e a automação permanecem em Python. O build avaliado usa frames de 48 B para heap_unique e 32 B para sift, mais uma margem conservadora de 16 B: 96 B extras. Não há recursão nem alocação dinâmica no algoritmo. O mesmo objeto C é usado no teste nativo sem interpretador e na biblioteca da infraestrutura Python. O limite independe de n nesse build; requer nova avaliação em outro compilador/ABI. A seção 6 permite escolha da linguagem, mas os objetivos e a rubrica citam Pascal: permanece necessária confirmação do professor e aprovação do par.
+Embarca permite 256 bytes extras ao vetor já residente, incluindo a pilha das funções. Datacenter exige n=10⁷ em menos de 2 s na máquina da disciplina. A solução Embarca foi implementada em C para atender ao orçamento físico; o bitmap e a automação permanecem em Python. A compilação avaliada usa quadros de pilha de 48 B para heap_unique e 32 B para sift, mais uma margem conservadora de 16 B: 96 B extras. Não há recursão nem alocação dinâmica no algoritmo. O mesmo objeto C é usado no teste nativo sem interpretador e na biblioteca da infraestrutura Python. O limite independe de n nessa compilação; requer nova avaliação em outro compilador/ABI. A seção 6 permite escolha da linguagem, mas os objetivos e a rubrica citam Pascal: permanece necessária confirmação do professor e aprovação do par.
 
 ## 1. Força bruta
 
 Buscar cada leitura no prefixo de únicos e anexar se ausente resolve o problema exatamente. O máximo de comparações para n e u fixos é u(u−1)/2+(n−u)u: as primeiras inserções custam 0 até u−1 comparações; as repetições podem custar u. Melhor Θ(n) com iguais; pior genérico Θ(n²) se D≥n; limite O(nu) e, para D fixo, O(nD). Não existe média sem distribuição; nu/2 é apenas aproximação de posições uniformes após formar o conjunto. Pilha e escalares O(1) palavras, heap/disco zero no modelo de implementação de baixo nível. Objetos Python não recebem essa garantia em bytes. Embarca pode usar uma versão de baixo nível auditada; Datacenter evita até cerca de 3,28×10¹¹ comparações para n=10⁷ e u≈D (328 s a 1 ns/comparação hipotético).
 
-## 2. Ordenação e varredura — Heap Sort implementado
+## 2. Ordenação e varredura: Heap Sort implementado
 
-Construir max-heap custa Θ(n), pois a soma das alturas dos nós é O(n). Cada extração coloca o máximo no sufixo definitivo e faz uma descida O(log n); total O(n log n), seguido de compactação Θ(n). Com chaves distintas, permutações uniformes têm tempo médio Θ(n log n), também atingido no pior caso genérico. Todos iguais encerram cada descida cedo: melhor Θ(n). Não se aplica o limite inferior de n chaves distintas quando n>D. A pilha de chamadas tem profundidade constante, sem recursão; a implementação não copia o vetor. Na implementação C, índices usam size_t e leituras usam uint16_t, com número fixo de temporários. A fonte, os frames static do compilador e o objeto sem chamadas externas fundamentam o limite local de 96 B. Não se confunde O(1) em palavras com uma constante física: ela foi conferida neste binário.
+Construir max-heap custa Θ(n), pois a soma das alturas dos nós é O(n). Cada extração coloca o máximo no sufixo definitivo e faz uma descida O(log n); total O(n log n), seguido de compactação Θ(n). Com chaves distintas, permutações uniformes têm tempo médio Θ(n log n), também atingido no pior caso genérico. Todos iguais encerram cada descida cedo: melhor Θ(n). Não se aplica o limite inferior de n chaves distintas quando n>D. A pilha de chamadas tem profundidade constante, sem recursão; a implementação não copia o vetor. Na implementação C, índices usam size_t e leituras usam uint16_t, com número fixo de temporários. O compilador informa quadros de pilha de tamanho fixo. Esse relatório, a conferência da fonte e a ausência de chamadas externas no objeto sustentam o limite local de 96 B. Não se confunde O(1) em palavras com uma constante física: ela foi conferida neste binário.
 
-A descida troca com o maior filho, preservando as subárvores já em heap; a violação possível desce e termina. A extração mantém prefixo em heap e sufixo ordenado. Depois da ordenação, valores diferentes do último emitido são exatamente os únicos. O índice de escrita nunca avança além da leitura. Quick Sort recursivo usual tem média Θ(n log n), pior Θ(n²) e pilha dependente de n; Merge Sort usual necessita vetor auxiliar Θ(n). A escolha de Heap Sort C permite manter o vetor no próprio lugar e provar o limite de RAM no build avaliado. A ponte heap.py não implementa outra deduplicação; apenas chama a função C, e não é parte do firmware.
+A descida troca com o maior filho, preservando as subárvores já em heap; a violação possível desce e termina. A extração mantém prefixo em heap e sufixo ordenado. Depois da ordenação, valores diferentes do último emitido são exatamente os únicos. O índice de escrita nunca avança além da leitura. Quick Sort recursivo usual tem média Θ(n log n), pior Θ(n²) e pilha dependente de n; Merge Sort usual necessita vetor auxiliar Θ(n). A escolha de Heap Sort C permite manter o vetor no próprio lugar e provar o limite de RAM no compilação avaliada. A ponte heap.py não implementa outra deduplicação; apenas chama a função C, e não é parte do programa embarcado.
 
 ## 3. Hash/conjunto
 
@@ -46,7 +46,7 @@ n=1000 distinto é válido: log₁₀(1000!)≈2567,604644222. A 1 ns/elemento/t
 
 Enumerar incluir/excluir cada posição visita 2ⁿ folhas e 2ⁿ⁺¹−1 nós. Recuperar os singletons e emitir só valores ainda ausentes fornece uma solução deliberadamente redundante. Posições são distintas mesmo quando valores coincidem. Só visitar custa Θ(2ⁿ) tempo; recursão tem profundidade n+1 e pilha Θ(n), e pode ter heap zero em streaming. Materializar todos os elementos custa Θ(n2ⁿ), pois Σt·binom(n,t)=n2ⁿ⁻¹. Com inteiros de 2 B, o payload mínimo é n2ⁿ B, além dos descritores. As curvas adotam materialização para tempo e RAM, com layouts nominais explícitos.
 
-Para n=1000: 2¹⁰⁰⁰≈1,0715×10³⁰¹ subconjuntos, payload ≈1,0715×10³⁰⁴ B, e pilha de 16016 B sob hipótese otimista de 16 B/frame. Só enumerar a 10⁹ folhas/s exigiria ≈1,0715×10²⁹² s. Viola memória Embarca e viabilidade temporal geral; em Python o limite de recursão também impede grandes profundidades. Para n≤10 pode servir em outro problema combinatório.
+Para n=1000: 2¹⁰⁰⁰≈1,0715×10³⁰¹ subconjuntos, payload ≈1,0715×10³⁰⁴ B, e pilha de 16016 B sob hipótese otimista de 16 B por quadro de pilha. Só enumerar a 10⁹ folhas/s exigiria ≈1,0715×10²⁹² s. Viola memória Embarca e viabilidade temporal geral; em Python o limite de recursão também impede grandes profundidades. Para n≤10 pode servir em outro problema combinatório.
 
 ## 9. Unário em disco
 
@@ -71,17 +71,17 @@ A comparação de tempo inclui implementações em linguagens distintas. Nos vet
 ## Referências
 
 - Cormen, Leiserson, Rivest e Stein. Introduction to Algorithms. 4ª ed., MIT Press, 2022. https://mitpress.mit.edu/9780262046305/introduction-to-algorithms/
-- Bloom, B. H. Space/Time Trade-offs in Hash Coding with Allowable Errors. CACM 13(7), 1970, 422–426. https://doi.org/10.1145/362686.362692
-- Broder, A.; Mitzenmacher, M. Network Applications of Bloom Filters: A Survey. Internet Mathematics 1(4), 2004, 485–509. https://doi.org/10.1080/15427951.2004.10129096
+- Bloom, B. H. Space/Time Trade-offs in Hash Coding with Allowable Errors. CACM 13(7), 1970, 422 a 426. https://doi.org/10.1145/362686.362692
+- Broder, A.; Mitzenmacher, M. Network Applications of Bloom Filters: A Survey. Internet Mathematics 1(4), 2004, 485 a 509. https://doi.org/10.1080/15427951.2004.10129096
 - GCC. Developer Options: -fstack-usage. https://gcc.gnu.org/onlinedocs/gcc/Developer-Options.html
 - Python Software Foundation. array, tracemalloc e time. https://docs.python.org/3/library/array.html ; https://docs.python.org/3/library/tracemalloc.html ; https://docs.python.org/3/library/time.html
 
 
-# Metodologia e resultados — C e Python
+# Metodologia e resultados: C e Python
 
-Um aquecimento e três rodadas por algoritmo/tamanho. Heap Sort é C nativo; bitmap é Python. Ambos usam as mesmas leituras de random.Random(20261108).getrandbits(16), reiniciado por escala. A entrada de teste é array("H") com elementos nativos de 2 B. O adaptador ctypes compartilha seu buffer com C, sem copiar. A preparação desse ponteiro, geração, cópia e validação ficam fora do cronômetro. O tempo C inclui a chamada via ctypes e seu pequeno custo de conversão/retorno; não se subtrai uma estimativa desse custo, que é relevante nos vetores menores. Inicialização do bitmap e compactação ficam dentro do tempo.
+Para cada algoritmo e tamanho, fizemos um aquecimento e três rodadas de tempo. Heap Sort é C nativo; bitmap é Python. Ambos usam as mesmas leituras de random.Random(20261108).getrandbits(16), reiniciado por escala. A entrada de teste é array("H") com elementos nativos de 2 B. O adaptador ctypes compartilha seu buffer com C, sem copiar. A preparação desse ponteiro, geração, cópia e validação ficam fora do cronômetro. O tempo C inclui a chamada via ctypes e seu pequeno custo de conversão/retorno; não se subtrai uma estimativa desse custo, que é relevante nos vetores menores. Inicialização do bitmap e compactação ficam dentro do tempo.
 
-Ambiente: 3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]. Linux-6.18.57-x86_64-with-glibc2.41. model name	: AMD EPYC 9V74 80-Core Processor. Compilador C: gcc (Debian 14.2.0-19) 14.2.0. Flags: -std=c11 -O3 -Wall -Wextra -Wpedantic -Werror -fno-inline -fno-omit-frame-pointer -mno-red-zone -fno-tree-loop-distribute-patterns -fno-ipa-cp -fstack-usage -fPIC.
+Ambiente: 3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]. Linux-6.18.57-x86_64-with-glibc2.41. model name	: AMD EPYC 9V74 80-Core Processor. Compilador C: gcc (Debian 14.2.0-19) 14.2.0. Opções de compilação: -std=c11 -O3 -Wall -Wextra -Wpedantic -Werror -fno-inline -fno-omit-frame-pointer -mno-red-zone -fno-tree-loop-distribute-patterns -fno-ipa-cp -fstack-usage -fPIC.
 
 | Algoritmo | Linguagem | n | u | Mediana (s) | Mínimo (s) | Máximo (s) |
 |---|---|---|---|---|---|---|
@@ -92,7 +92,7 @@ Ambiente: 3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]. Linux-6.18.57-x
 | heap | C | 10000000 | 65536 | 2.092282 | 2.000067 | 2.513517 |
 | bitmap | Python | 10000000 | 65536 | 1.017508 | 0.986792 | 1.092296 |
 
-Validação independente ocorreu após todas as rodadas, fora da janela. Os testes C nativos passaram 3294 casos, além de NULL/0 e resposta conhecida, inclusive com AddressSanitizer/UndefinedBehaviorSanitizer em build separado. Incluem sentinelas, enumeração pequena, domínio completo e quatro distribuições em cada escala obrigatória. Os testes Python verificam a chamada C e o bitmap com set/sorted/dict como referências exclusivas de infraestrutura. Asserções ficam habilitadas. Sanitizadores não fornecem os tempos ou frames do build otimizado.
+Depois de cada rodada, conferimos a resposta com uma referência independente. Essa validação ficou fora do tempo medido. Os testes C nativos passaram 3294 casos, além de NULL/0 e resposta conhecida, inclusive com AddressSanitizer/UndefinedBehaviorSanitizer em uma compilação separada. Incluem sentinelas, enumeração pequena, domínio completo e quatro distribuições em cada escala obrigatória. Os testes Python verificam a chamada C e o bitmap com set/sorted/dict como referências exclusivas de infraestrutura. As verificações com assert permaneceram habilitadas. Sanitizadores não fornecem os tempos ou quadros de pilha da compilação otimizada.
 
 ## Memória extra: métodos distintos e recursos separados
 
@@ -105,43 +105,43 @@ Validação independente ocorreu após todas as rodadas, fora da janela. Os test
 | bitmap | 10000000 | 65536 | 8553 | Pico tracemalloc | 20000000 |
 | heap | 10000000 | 65536 | 96 | Limite GCC + margem | 20000000 |
 
-Os três registros C correspondem a execuções completas validadas nos três tamanhos, com o mesmo limite estático do binário. Não são três picos de tracemalloc. O bitmap recebeu uma rodada completa rastreada por tamanho, separada dos tempos; entrada, relógio e validação ficaram fora do rastreamento. Seus picos não incluem toda a memória interna do interpretador e não provam todos os casos possíveis. RSS é o máximo do processo inteiro de testes; o payload calculado da entrada é 2n B, sem cabeçalho ou folga do array. Não se deduz memória extra subtraindo o vetor do RSS.
+Os três registros C correspondem a execuções completas validadas nos três tamanhos, com o mesmo limite estático do binário. Esses registros usam o limite do compilador, não um pico de tracemalloc. O bitmap recebeu uma rodada completa rastreada por tamanho, separada dos tempos; entrada, relógio e validação ficaram fora do rastreamento. Seus picos não incluem toda a memória interna do interpretador e não provam todos os casos possíveis. RSS é o máximo do processo inteiro de testes; o payload calculado da entrada é 2n B, sem cabeçalho ou folga do array. Não se deduz memória extra subtraindo o vetor do RSS.
 
 ## Comprovação do orçamento Embarca
 
-A solução embarcada é src/heap.c, que pode ser ligada diretamente a um programa C, sem interpretador. Os executáveis de teste C usam o mesmo objeto do algoritmo usado na biblioteca. heap.py é apenas adaptador para a infraestrutura Python do computador; seus objetos, ctypes e validação não fazem parte do firmware proposto. Não se afirma que um processo Python inteiro caiba em 256 B.
+A solução embarcada é src/heap.c, que pode ser ligada diretamente a um programa C, sem interpretador. Os executáveis de teste C usam o mesmo objeto do algoritmo usado na biblioteca. heap.py é apenas adaptador para a infraestrutura Python do computador; seus objetos, ctypes e validação não fazem parte do programa embarcado proposto. Não se afirma que um processo Python inteiro caiba em 256 B.
 
-O GCC gerou frames de tamanho static, conforme -fstack-usage:
+A opção -fstack-usage do GCC produziu o relatório abaixo. O termo static indica que o tamanho do quadro de pilha é fixo:
 
 ```text
 src/heap.c:5:13:sift    32  static
 src/heap.c:14:8:heap_unique 48  static
 ```
 
-O caminho mais profundo é heap_unique → sift: 48+32=80 B. Acrescentando uma margem conservadora de 16 B na fronteira de chamada/ABI, obtemos 96 B, abaixo dos 256 B. Os frames do compilador incluem armazenamento de locais/temporários efetivamente colocado na pilha, alinhamento, salvamento de registradores e retorno conforme esse build; variáveis mantidas em registradores não alocam RAM adicional. Não se trata de uma soma incompleta de sizeof de variáveis.
+No caminho de chamadas mais profundo, heap_unique chama sift. A soma é 48+32=80 B. Acrescentando uma margem conservadora de 16 B na fronteira de chamada/ABI, obtemos 96 B, abaixo dos 256 B. Os quadros de pilha do compilador incluem armazenamento de locais/temporários efetivamente colocado na pilha, alinhamento, salvamento de registradores e retorno conforme essa compilação; variáveis mantidas em registradores não alocam RAM adicional. Não se trata de uma soma incompleta de sizeof de variáveis.
 
-Não há recursão, cópia do vetor ou alocação dinâmica no algoritmo. A fonte e a desmontagem foram conferidas; nm -u do objeto não apresenta símbolos externos. O heap dinâmico do algoritmo é zero. memoria.json preserva o relatório bruto do compilador, desmontagem, flags e hashes do objeto e biblioteca. O limite independe de n porque o caminho de chamadas é fixo e os frames são static. O build falha na coleta se a soma com margem passar de 256 B.
+Não há recursão, cópia do vetor ou alocação dinâmica no algoritmo. A fonte e a desmontagem foram conferidas; nm -u do objeto não apresenta símbolos externos. O algoritmo não faz alocações dinâmicas. memoria.json preserva o relatório bruto do compilador, desmontagem, opções de compilação e hashes do objeto e biblioteca. O limite independe de n porque o caminho de chamadas é fixo e os quadros de pilha têm tamanho fixo. A coleta é interrompida se a soma com margem passar de 256 B.
 
-Essa comprovação vale para o GCC, ABI x86-64 e flags registrados, incluindo os três n testados. Outro alvo/compilador exige recompilar e auditar novamente; pilha do chamador e interrupções precisam de reserva própria no firmware real. O enunciado pressupõe o vetor de entrada já residente. Nenhum dispositivo embarcado específico foi informado, então não se declara validação de uma placa não testada.
+Essa comprovação vale para o GCC, ABI x86-64 e opções de compilação registrados, incluindo os três n testados. Outro alvo/compilador exige recompilar e auditar novamente; pilha do chamador e interrupções precisam de reserva própria no programa embarcado real. O enunciado pressupõe o vetor de entrada já residente. Nenhum dispositivo embarcado específico foi informado, então não se declara validação de uma placa não testada.
 
 O bitmap levou 1.017508 s de mediana local em n=10⁷. A mediana ficou abaixo de 2 s localmente; isso não certifica a máquina da disciplina.
 
-Recomendação: Heap Sort C para Embarca pelo limite local de memória comprovado; bitmap Python para Datacenter pelo domínio conhecido e custo linear, sujeito à referência. O prazo de dois segundos não é requisito Embarca: o tempo observado do Heap Sort é relatado integralmente, mesmo quando supera dois segundos. A comparação usa implementações em linguagens diferentes; a razão dos tempos não isola o efeito exclusivo dos algoritmos. Permanecem necessárias aprovação do par, confirmação da interpretação de linguagem diante das menções a Pascal e validação na máquina da disciplina.
+Recomendação: Heap Sort C para Embarca pelo limite local de memória comprovado; bitmap Python para Datacenter pelo domínio conhecido e custo linear, sujeito à referência. O prazo de dois segundos não é requisito Embarca: o tempo observado do Heap Sort é relatado integralmente, mesmo quando supera dois segundos. A comparação usa implementações em linguagens diferentes; a razão dos tempos não isola o efeito exclusivo dos algoritmos. Ainda é necessário obter a aprovação do par, confirmar com o professor a linguagem aceita diante das menções a Pascal e executar o teste na máquina da disciplina.
 
 
-![tempo_medido](graficos/tempo_medido.png)
+![tempo_medido](../graficos/tempo_medido.png)
 
 
-![tempo_comparativo](graficos/tempo_comparativo.png)
+![tempo_comparativo](../graficos/tempo_comparativo.png)
 
 
-![tempo_completo](graficos/tempo_completo.png)
+![tempo_completo](../graficos/tempo_completo.png)
 
 
-![memoria_algoritmos](graficos/memoria_algoritmos.png)
+![memoria_algoritmos](../graficos/memoria_algoritmos.png)
 
 
-![memoria_comparativa](graficos/memoria_comparativa.png)
+![memoria_comparativa](../graficos/memoria_comparativa.png)
 
 
-![armazenamento](graficos/armazenamento.png)
+![armazenamento](../graficos/armazenamento.png)

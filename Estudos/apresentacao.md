@@ -4,11 +4,11 @@
 
 Este documento serve para ensaiar a apresentação e entender a razão de cada afirmação. As falas são sugestões: a equipe deve explicá-las com as próprias palavras. Todos precisam conhecer as duas implementações e a análise das outras oito estratégias. A divisão entre os integrantes pode ser feita depois do ensaio, sem deixar uma pessoa responsável por saber apenas uma parte.
 
-A versão principal abaixo ocupa aproximadamente 12 a 15 minutos, dependendo da demonstração. Ajustar ao tempo informado pelo professor. As perguntas e os aprofundamentos no final são material de reserva, não precisam ser lidos integralmente na apresentação.
+A versão principal abaixo ocupa aproximadamente 12 a 15 minutos, dependendo da demonstração. Ajuste o roteiro ao tempo informado pelo professor. As perguntas e os aprofundamentos no final são material de reserva, não precisam ser lidos integralmente na apresentação.
 
 ## Antes de começar
 
-Na raiz do repositório, verificar os comandos:
+Na raiz do repositório, execute os comandos abaixo antes de ensaiar:
 
 ```sh
 python3 projeto/scripts/compilar.py --sanitizers
@@ -18,22 +18,22 @@ python3 projeto/src/main.py bitmap 3 1 3 0 65535
 python3 projeto/tests/test.py
 ```
 
-Deixar abertos o relatório, os seis gráficos e os arquivos heap.py e bitmap.py. Os testes pequenos são rápidos; **não executar a coleta inteira durante a apresentação**, a menos que haja tempo reservado. Na coleta atual, cada rodada de Heap Sort C com dez milhões de leituras levou aproximadamente dois segundos; a coleta executa um aquecimento e três rodadas por combinação. O bitmap recebe também rastreamento de memória em rodada separada. Para a apresentação, usar exemplos pequenos e os gráficos já gerados, evitando depender da duração de toda a coleta.
+Deixe abertos o relatório, os seis gráficos e os arquivos heap.c e bitmap.py. Os testes pequenos são rápidos; **não executar a coleta inteira durante a apresentação**, a menos que haja tempo reservado. Na coleta atual, cada rodada de Heap Sort C com dez milhões de leituras levou aproximadamente dois segundos; a coleta executa um aquecimento e três rodadas por combinação. O bitmap recebe também rastreamento de memória em rodada separada. Para a apresentação, usar exemplos pequenos e os gráficos já gerados, evitando depender da duração de toda a coleta.
 
-Preparar a explicação a partir dos [dados reais](../projeto/dados/resumo.json). Se houver uma nova coleta, atualizar as falas numéricas a partir desse arquivo. Os valores deste roteiro correspondem à coleta mista C/Python atualmente entregue.
+Prepare a explicação a partir dos [dados reais](../projeto/dados/resumo.json). Se houver uma nova coleta, atualizar as falas numéricas a partir desse arquivo. Os valores deste roteiro correspondem à coleta mista C/Python atualmente entregue.
 
 ## Visão geral do tempo
 
 | Momento | Conteúdo | O que precisa ficar claro |
 |---|---|---|
-| 0–1 min | Problema e dois clientes | Mesmo problema, restrições diferentes |
-| 1–2 min | Exemplo e contrato | O retorno u delimita a saída válida |
-| 2–4 min | Heap Sort e compactação | Como funciona, por que está correto e seu custo |
-| 4–6 min | Bitmap | Como um bit identifica um valor e por que é linear |
-| 6–8 min | Resultados e gráficos | Medição real, hipótese e limitações são coisas diferentes |
-| 8–11 min | Quatro estratégias exageradas | Rejeitar com contas e recursos específicos |
-| 11–13 min | Força bruta, hash, árvore e Bloom | Comparar escolhas e explicar o domínio limitado |
-| 13–15 min | Recomendação e pendências | Concluir somente o que as evidências permitem |
+| 0 a 1 min | Problema e dois clientes | Mesmo problema, restrições diferentes |
+| 1 a 2 min | Exemplo e contrato | O retorno u delimita a saída válida |
+| 2 a 4 min | Heap Sort e compactação | Como funciona, por que está correto e seu custo |
+| 4 a 6 min | Bitmap | Como um bit identifica um valor e por que é linear |
+| 6 a 8 min | Resultados e gráficos | Medição real, hipótese e limitações são coisas diferentes |
+| 8 a 11 min | Quatro estratégias exageradas | Rejeitar com contas e recursos específicos |
+| 11 a 13 min | Força bruta, hash, árvore e Bloom | Comparar escolhas e explicar o domínio limitado |
+| 13 a 15 min | Recomendação e pendências | Concluir somente o que as evidências permitem |
 
 ## 1. Abertura: qual problema estamos resolvendo?
 
@@ -72,7 +72,7 @@ n=5, u=4
 
 > As duas respostas contêm exatamente os mesmos valores únicos. Heap Sort os entrega em ordem crescente. Bitmap mantém a ordem em que cada valor apareceu pela primeira vez. As funções alteram o próprio vetor e retornam quatro. Só as primeiras quatro posições são a resposta; o conteúdo que sobra depois disso não faz parte da saída.
 
-Explicar que a entrada é `array('H')`, com dois bytes por elemento na máquina avaliada. A ponte heap.py compartilha esse buffer com C, sem copiar. Dentro do núcleo embarcado, índices e temporários são tipos C; o firmware não executa a ponte Python.
+Explicar que a entrada é `array('H')`, com dois bytes por elemento na máquina avaliada. A ponte heap.py compartilha esse buffer com C, sem copiar. Dentro do núcleo embarcado, índices e temporários são tipos C; o programa embarcado não executa a ponte Python.
 
 **Critério de corretude:** a saída não pode inventar valor, perder valor nem repetir um valor dentro do prefixo válido. Os testes verificam essas propriedades com set e a ordem com sorted/dict, somente na infraestrutura de teste.
 
@@ -175,10 +175,10 @@ Abrir [tempo_medido.png](../projeto/graficos/tempo_medido.png). Ele contém só 
 
 Para dez milhões de leituras:
 
-| Algoritmo | Mediana local | Mínimo–máximo |
+| Algoritmo | Mediana local | Mínimo a máximo |
 |---|---|---|
-| Heap Sort C | 2,092282 s | 2,000067–2,513517 s |
-| Bitmap Python | 1,017508 s | 0,986792–1,092296 s |
+| Heap Sort C | 2,092282 s | 2,000067 a 2,513517 s |
+| Bitmap Python | 1,017508 s | 0,986792 a 1,092296 s |
 
 A razão das medianas é aproximadamente 2,06 nesta entrada e máquina. Essa comparação envolve linguagens diferentes, portanto não isola só o efeito dos algoritmos. Nos vetores menores, Heap Sort C foi mais rápido; no maior, o bitmap se beneficia do trabalho linear. Cache e escalonamento não foram isolados por experimento causal.
 
@@ -188,7 +188,7 @@ O tempo de dois segundos é requisito Datacenter, não Embarca. A mediana C acim
 
 Abrir [tempo_comparativo.png](../projeto/graficos/tempo_comparativo.png).
 
-> Só Heap Sort e bitmap foram implementados. As outras oito linhas são modelos teóricos com constantes explícitas, não benchmarks. Usamos custos nominais otimistas de operações compactas, sem calibração para Python. Big-O sozinho não fornece segundos.
+> Só Heap Sort e bitmap foram implementados. As outras oito linhas são modelos teóricos com constantes explícitas, não benchmarks. Usamos custos nominais otimistas de operações compactas, sem calibração para as implementações C e Python. Big-O sozinho não fornece segundos.
 
 Abrir [tempo_completo.png](../projeto/graficos/tempo_completo.png). Explicar:
 
@@ -200,37 +200,37 @@ Não ler E=1000 como mil segundos. Não afirmar que uma alternativa Python teria
 
 Abrir [memoria_algoritmos.png](../projeto/graficos/memoria_algoritmos.png). As legendas distinguem um limite calculado pelo compilador e um pico rastreado, ambos em bytes. Os oito modelos estão em [memoria_comparativa.png](../projeto/graficos/memoria_comparativa.png), e entrada/disco/processo em [armazenamento.png](../projeto/graficos/armazenamento.png).
 
-> Para Heap Sort C, o GCC reporta 48 B de frame para heap_unique e 32 B para sift. Eles ficam ativos simultaneamente: 48+32=80 B. Com margem conservadora de 16 B, são 96 B, abaixo dos 256 B. A fonte e o objeto não têm recursão ou chamadas de alocação. Para o bitmap Python, tracemalloc registrou 8553 B nas três entradas; é um pico rastreado, não toda a RAM do interpretador. A entrada e a validação foram excluídas dessa janela.
+> Para Heap Sort C, o GCC informa 48 B de quadro de pilha para heap_unique e 32 B para sift. Eles ficam ativos simultaneamente: 48+32=80 B. Com margem conservadora de 16 B, são 96 B, abaixo dos 256 B. A fonte e o objeto não têm recursão ou chamadas de alocação. Para o bitmap Python, tracemalloc registrou 8553 B nas três entradas; é um pico rastreado, não toda a RAM do interpretador. A entrada e a validação foram excluídas dessa janela.
 
-O limite C não é uma extrapolação de uma amostra pequena. Os frames são static e o caminho de chamadas é fixo, portanto o limite independe de n no mesmo build, inclusive nos três tamanhos executados. As saídas brutas e a desmontagem estão em memoria.json. O teste C sem Python usa o mesmo objeto que a biblioteca da coleta.
+O limite C não é uma extrapolação de uma amostra pequena. Os quadros de pilha têm tamanho fixo, indicado como static no relatório, e o caminho de chamadas também é fixo, portanto o limite independe de n na mesma compilação, inclusive nos três tamanhos executados. As saídas brutas e a desmontagem estão em memoria.json. O teste C sem Python usa o mesmo objeto que a biblioteca da coleta.
 
-Explicar a separação: o algoritmo embarcado é heap.c. Python, ctypes, referências de validação e alocação de vetores de teste pertencem ao computador de experimentos; não são parte do firmware proposto. Isso não é alegar que o processo inteiro ocupa 96 B. A entrada de dez milhões tem 2n=20000000 B de payload, separada do limite extra.
+Explicar a separação: o algoritmo embarcado é heap.c. Python, ctypes, referências de validação e alocação de vetores de teste pertencem ao computador de experimentos; não são parte do programa embarcado proposto. Isso não é alegar que o processo inteiro ocupa 96 B. A entrada de dez milhões tem 2n=20000000 B de payload, separada do limite extra.
 
-A folga é 256−96=160 B. Para outro compilador/ABI ou firmware com interrupções, refazer a auditoria e reservar os recursos do chamador/ambiente. Não foi fornecida uma placa específica; a evidência é local ao GCC/x86-64 registrado.
+A folga é 256−96=160 B. Para outro compilador/ABI ou programa embarcado com interrupções, refazer a auditoria e reservar os recursos do chamador/ambiente. Não foi fornecida uma placa específica; a evidência é local ao GCC/x86-64 registrado.
 
 ## 6. Rejeitar as quatro estratégias exageradas com números
 
 Aqui o objetivo é explicar uma conta de cada estratégia, não decorar uma sequência enorme de algarismos. Se necessário, deixar as fórmulas detalhadas abertas em [Matematica.md](Matematica.md).
 
-### Bogosort — probabilidade e fatorial
+### Bogosort: probabilidade e fatorial
 
 > Embaralhar até ordenar tem probabilidade minúscula quando os valores são distintos. Para n=1000, válido no domínio, há 1000! permutações; log₁₀(1000!)≈2567,6. Mesmo supondo um custo extremamente favorável de um microssegundo por tentativa, o tempo esperado seria da ordem de 10²⁵⁶¹ segundos.
 
 Explicar o exemplo menor [1,1,2]: há seis permutações rotuladas, mas duas levam à mesma sequência ordenada de valores. Então q=2/6 e a espera é três tentativas independentes, partindo de uma entrada desordenada. A fórmula geral é n!/∏cⱼ!. Com n>D, é obrigatório considerar repetições; não usar n! como se todos fossem distintos.
 
-### Subconjuntos — folhas e materialização
+### Subconjuntos: folhas e materialização
 
 > Enumerar todos os subconjuntos dá 2ⁿ folhas. Se guardar todos os elementos, cada posição aparece em metade dos subconjuntos: n2ⁿ⁻¹ elementos no total. Com dois bytes por elemento, só o payload ocupa n2ⁿ bytes.
 
-Para n=1000, isso é aproximadamente 1,07×10³⁰⁴ B. A pilha também tem profundidade n+1; sob uma hipótese nominal de 16 B/frame, já seriam 16016 B. Streaming evita guardar todas as folhas, mas continua com tempo exponencial e pilha linear. Frames de 16 B são hipótese didática, não uma medição de Python.
+Para n=1000, isso é aproximadamente 1,07×10³⁰⁴ B. A pilha também tem profundidade n+1; sob uma hipótese nominal de 16 B por quadro de pilha, já seriam 16016 B. Streaming evita guardar todas as folhas, mas continua com tempo exponencial e pilha linear. Quadros de pilha de 16 B são hipótese didática, não uma medição de Python.
 
-### Unário — armazenamento e releituras
+### Unário: armazenamento e releituras
 
 > Nosso formato grava x símbolos '1' e um delimitador '0'. Cada registro ocupa x+1 bytes. Como x≤65535, o total gravado está entre n e 65536n: é linear em n neste domínio. A representação pode ser exponencial nos bits de um valor, que é outra variável.
 
 Para dez milhões de valores com média uniforme, o arquivo esperado tem 327,685 GB. Só escrever isso a 1 GB/s hipotético leva 327,685 s. A variante de deduplicação ainda relê registros anteriores; o tráfego esperado é 32768,5n(n+1)/2, de ordem quadrática para D fixo. Não confundir o custo de gravar com o de deduplicar.
 
-### Matriz — todas as comparações
+### Matriz: todas as comparações
 
 > Uma matriz de dez milhões por dez milhões tem 10¹⁴ células. São 100 TB se cada célula usar um byte ou 12,5 TB empacotando bits. Mesmo a um nanossegundo por célula, levaria 100000 segundos. O problema não exigiu guardar a auditoria de todas as comparações.
 
@@ -253,7 +253,7 @@ Se perguntarem pela média, declarar a distribuição: a palavra «médio» não
 
 **Fala sugerida:**
 
-> O domínio de 16 bits permite ao bitmap Python resolver exatamente o problema com trabalho linear. A mediana local ficou abaixo de dois segundos, mas ainda precisamos da máquina da disciplina para confirmar o requisito formal. Para Embarca, a função C ordena e compacta sem vetor auxiliar, e o limite conservador de 96 B foi demonstrado no build local. A aprovação do par e a interpretação da linguagem diante das menções a Pascal continuam dependendo do professor.
+> O domínio de 16 bits permite ao bitmap Python resolver exatamente o problema com trabalho linear. A mediana local ficou abaixo de dois segundos, mas ainda precisamos da máquina da disciplina para confirmar o requisito formal. Para Embarca, a função C ordena e compacta sem vetor auxiliar, e o limite conservador de 96 B foi demonstrado na compilação local. A aprovação do par e a interpretação da linguagem diante das menções a Pascal continuam dependendo do professor.
 
 Encerrar com a recomendação e as evidências, não com «todos os requisitos foram cumpridos». Permanecem pendentes aprovação do par, aceitação da linguagem diante das menções a Pascal e teste na referência.
 
@@ -267,7 +267,7 @@ Encerrar com a recomendação e as evidências, não com «todos os requisitos f
 
 **A cauda repetida significa erro?** Não. O contrato define a[0:u] como saída. Mostrar os n elementos como se fossem a resposta seria usar a função incorretamente.
 
-**Por que não Quick Sort?** A versão recursiva usual tem pilha dependente de n e pior tempo quadrático. Escolhemos Heap Sort iterativo para estudar uma estrutura de chamadas de profundidade constante. Na implementação C, a auditoria de frames comprova 96 B; dizer apenas que não há recursão não forneceria sozinho esse número.
+**Por que não Quick Sort?** A versão recursiva usual tem pilha dependente de n e pior tempo quadrático. Escolhemos Heap Sort iterativo para estudar uma estrutura de chamadas de profundidade constante. Na implementação C, a auditoria de quadros de pilha comprova 96 B; dizer apenas que não há recursão não forneceria sozinho esse número.
 
 **O(1) significa zero bytes ou 256 bytes?** Não. Significa que a quantidade de palavras não cresce com n no modelo adotado. Uma constante de 8192 B continua sendo O(1) em n, e ainda assim é 32 vezes o teto. Em Python há também objetos e execução interna; com índices arbitrariamente grandes é preciso considerar seus bits.
 
@@ -291,13 +291,13 @@ Encerrar com a recomendação e as evidências, não com «todos os requisitos f
 
 **Por que a ponte heap.py não invalida a prova?** Ela é infraestrutura do computador para chamar a função C e compartilhar um buffer. A função não usa API Python e também é testada num programa C sem interpretador. O dispositivo pode ligar diretamente o objeto C; não propomos colocar ctypes e CPython no sensor.
 
-**Por que não medir C com tracemalloc?** Ele rastreia alocações Python e não comprovaria a pilha nativa da função C. Usamos o relatório do compilador, fonte e objeto, com o caminho de chamadas. O resultado é um limite estático do build, explicitamente identificado.
+**Por que não medir C com tracemalloc?** Ele rastreia alocações Python e não comprovaria a pilha nativa da função C. Usamos o relatório do compilador, fonte e objeto, com o caminho de chamadas. O resultado é um limite estático da compilação, identificado no relatório.
 
 **A mediana local abaixo de 2 s comprova o prazo da disciplina?** Não. Comprova o resultado local do bitmap; a referência da disciplina ainda precisa ser testada.
 
 ## Ensaio final da equipe
 
-Cada integrante deve conseguir, sem ler uma resposta pronta:
+No ensaio, cada integrante deve conseguir explicar os pontos abaixo com as próprias palavras:
 
 1. Diferenciar n, u e D com um exemplo.
 2. Explicar por que construir o heap é linear e por que extrair máximos pode custar n log n.
@@ -312,6 +312,6 @@ Usar a [Checklist](Checklist.md) para conferir a situação da entrega e [Matema
 
 **Fala sugerida:**
 
-> A crítica ao Heap Sort Python era correta. Para resolver a implementação, substituímos o núcleo embarcado por C e refizemos testes e medições. Agora a função embarcada executa sem Python e tem caminho de pilha estático de 48+32 B; com margem de 16 B, o total conservador é 96 B no build registrado. Mantivemos o bitmap em Python. Não confundimos a memória da ponte de testes com a função que pode ser ligada ao firmware.
+> A crítica ao Heap Sort Python era correta. Para resolver a implementação, substituímos o núcleo embarcado por C e refizemos testes e medições. Agora a função embarcada executa sem Python e tem caminho de pilha estático de 48+32 B; com margem de 16 B, o total conservador é 96 B na compilação registrada. Mantivemos o bitmap em Python. Não confundimos a memória da ponte de testes com a função que pode ser ligada ao programa embarcado.
 
 Mostrar a fonte curta, o relatório .su em memoria.json e `./projeto/build/test_nativo`. Para entender cada tipo e laço C, consultar a seção 17 de [Matematica.md](Matematica.md). A aprovação acadêmica do par e a validação Datacenter na máquina de referência permanecem pendentes; comprovar a memória local não equivale a inventar essas aprovações.
