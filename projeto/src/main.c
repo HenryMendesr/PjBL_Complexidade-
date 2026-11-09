@@ -15,10 +15,12 @@ int main(int argc,char **argv) {
     if(argc!=4) {fprintf(stderr,"Uso: %s heap|bitmap n repeticoes\n",argv[0]);return 1;}
     int bitmap=!strcmp(argv[1],"bitmap");
     if(!bitmap && strcmp(argv[1],"heap")) return 1;
+    if(!*argv[2] || strspn(argv[2],"0123456789")!=strlen(argv[2]) ||
+       !*argv[3] || strspn(argv[3],"0123456789")!=strlen(argv[3])) return 1;
     char *end; errno=0; unsigned long long parsed=strtoull(argv[2],&end,10);
     if(errno || *end || !parsed || parsed>SIZE_MAX/sizeof(uint16_t) || argv[2][0]=='-') return 1;
     size_t n=(size_t)parsed;
-    long reps=strtol(argv[3],&end,10); if(*end || reps<1 || reps>1000) return 1;
+    errno=0; long reps=strtol(argv[3],&end,10); if(errno || *end || reps<1 || reps>1000) return 1;
     uint16_t *a=malloc(n*sizeof(*a)),*b=malloc(n*sizeof(*b));
     if(!a||!b) {fprintf(stderr,"Sem memoria\n");free(a);free(b);return 1;}
     uint32_t s=20261108;

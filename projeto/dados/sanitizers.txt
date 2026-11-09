@@ -1,5 +1,3 @@
-make: Entering directory '/workspace/projeto'
 gcc -Isrc -Itests -std=c11 -O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer tests/test.c src/heap.c src/bitmap.c -o build/test_san
 ASAN_OPTIONS=detect_leaks=1 ./build/test_san
-OK: 222 casos x 2 algoritmos; NULL vazio também validado.
-make: Leaving directory '/workspace/projeto'
+OK: 3502 casos x 2 algoritmos; NULL vazio também validado.

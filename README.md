@@ -14,6 +14,10 @@ Trabalho sobre deduplicação de leituras de sensores para Embarca e Datacenter.
 
 A entrega implementa exatamente duas estratégias em C: Heap Sort iterativo in-place e bitmap de 65536 bits. As outras oito são analisadas e modeladas, sem benchmarks fictícios. Python automatiza experimentos, verificações matemáticas e documentos.
 
+## Auditoria
+
+[Resultados da auditoria](projeto/docs/auditoria.md) e [checklist por requisito e rubrica](projeto/docs/checklist.md). As pendências externas permanecem explicitadas; as novas medições substituem os dados correntes, mantendo o histórico anterior.
+
 ## Verificação
 
 ```sh

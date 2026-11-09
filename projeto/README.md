@@ -38,7 +38,9 @@ Para instalar dependências Python, se necessário, use um ambiente virtual grav
 ./build/benchmark bitmap 10000000 7
 ```
 
-Cada comando imprime CSV de sete rodadas medidas depois de um aquecimento; geração, cópia, validação e impressão ficam fora da janela. `make bench` executa os seis comandos, imprime resumos e grava dados/resultados_empiricos.csv (42 medições), resumo.csv, ambiente.json, memoria.txt e desmontagem.txt. As medições existentes serão substituídas por dados reais da nova máquina. Use outra cópia do projeto para preservar a execução entregue. `make docs` regenera previsões, gráficos, docs/resultados.md, docs/relatorio.md e relatorio.pdf a partir desses CSV, sem executar novos benchmarks.
+Na demonstração, n e repetições são tokens decimais positivos, sem sinal nem espaços; repetições fica entre 1 e 1000. O vetor vazio é validado pela API nos testes.
+
+Cada comando imprime CSV de sete rodadas medidas depois de um aquecimento; geração, cópia, validação e impressão ficam fora da janela. `make bench` executa os seis comandos, imprime resumos e grava dados/resultados_empiricos.csv (42 medições), resumo.csv, ambiente.json com hashes de origem, memoria.txt e desmontagem.txt. As medições existentes serão substituídas por dados reais da nova máquina. Use outra cópia do projeto para preservar a execução entregue. `make docs` regenera previsões, gráficos, docs/resultados.md, docs/relatorio.md e relatorio.pdf a partir desses CSV, sem executar novos benchmarks.
 
 Para preservar evidências brutas de uma nova execução:
 
@@ -48,6 +50,8 @@ cp build/heap.su build/bitmap.su dados/evidencias/
 make test > dados/testes.txt 2>&1
 make sanitize > dados/sanitizers.txt 2>&1
 ```
+
+A auditoria integral e a checklist estão em docs/auditoria.md e docs/checklist.md. Há 3502 casos por algoritmo, incluindo 3280 entradas exaustivas pequenas. As verificações matemáticas incluem contagens por enumeração, soma independente de logaritmos e grades de parâmetros; o total de asserções está em dados/revisao_matematica.txt.
 
 Os frames e ausência de símbolos externos são verificados por scripts/experimentos.py. O script interrompe com erro se o heap iterativo superar 256 B no build. Esses checks não demonstram o limite numa ABI diferente; as flags -mno-red-zone e a evidência atual são x86-64/GCC. Tempos de sanitizer não são benchmarks.
 

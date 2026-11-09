@@ -1,45 +1,50 @@
-# Checklist de entrega e validação
+# Checklist de atendimento ao enunciado
 
-Legenda: CONCLUÍDO significa produzido e/ou verificado localmente; PENDENTE é uma exigência externa ainda não demonstrada. A checklist não equivale a nota atribuída.
+Atendido: evidência disponível e conferida. Parcial: parte demonstrada, com limitação explícita. Ausente: item exigido sem artefato. Não verificável: depende de informação ou acesso externo. Os estados se referem às evidências desta entrega e não atribuem nota.
 
-| Requisito | Situação e evidência |
-|---|---|
-| Interpretação do enunciado | CONCLUÍDO; docs/analise_teorica.md |
-| Domínio 0–65535 e n=10³,10⁵,10⁷ | CONCLUÍDO; uint16_t, CSV real e casos nas três escalas |
-| Provas, somatórios e probabilidades auditadas | CONCLUÍDO; fundamentacao_matematica.md e 105 verificações independentes em revisao_matematica.txt |
-| Dez análises com tempo, espaço e hipóteses | CONCLUÍDO; dez seções em analise_teorica.md |
-| Exatamente duas estratégias implementadas | CONCLUÍDO; src/heap.c e src/bitmap.c; oráculo apenas em tests |
-| Contratos, ordem e compactação | CONCLUÍDO; dedup.h, código e testes |
-| Heap iterativo sem heap dinâmico ou recursão | CONCLUÍDO; fonte, nm, desmontagem e frames static |
-| Embarca ≤256 B extras independente de n | CONCLUÍDO no build local: 96 B conservadores; refazer em novo alvo |
-| Datacenter <2 s em n=10⁷ | CONCLUÍDO localmente; PENDENTE na máquina de referência |
-| Casos vazios, unitário, iguais, distintos, ordenados, reversos, intercalados, extremos, pequenos | CONCLUÍDO; tests/test.c e dados/testes.txt |
-| Corretude nas três escalas e comparação exata de conjuntos/ordem | CONCLUÍDO; 222 casos/algoritmo e validação em cada rodada |
-| Compilação e análise de erros de memória | CONCLUÍDO; GCC sem avisos, ASan/UBSan em dados/sanitizers.txt |
-| Benchmark com aquecimento, sete rodadas e dispersão | CONCLUÍDO; CSV bruto 42 linhas e resumo seis linhas |
-| Hardware, SO, compilador, flags, semente e distribuição | CONCLUÍDO; ambiente.json e CSV |
-| Separar algoritmo, entrada e processo; pilha, heap e disco | CONCLUÍDO; metodologia, memória e dois painéis gráficos |
-| Oito extrapolações no gráfico com duas medições | CONCLUÍDO; tempo.png e previsoes_log10.csv |
-| Constantes, hipóteses e incerteza explícitas | CONCLUÍDO; modelos.md |
-| Fatoriais/exponenciais sem overflow ou sumiço | CONCLUÍDO; lgamma e CSV log₁₀, painel de faixa completa |
-| Cálculos das quatro estratégias exageradas | CONCLUÍDO; exemplos numéricos e cenários especiais |
-| Corrigir unário, power set, Bogosort repetido e Bloom | CONCLUÍDO; análise e modelos |
-| Relatório PDF e fonte editável | CONCLUÍDO; relatorio.pdf e docs/relatorio.md |
-| Código, automação, dependências, README, gráficos e ZIP | CONCLUÍDO na entrega; roteiro de reprodução no README |
-| Aprovação prévia do par pelo professor | PENDENTE; não foi informada |
-| Confirmação de linguagem C | PENDENTE; divergência textual com Pascal |
-| Integrantes | Henry Rodrigues, Rafael Maluf e Matheus |
-| Bloom empírico ≤1% | NÃO SE APLICA; Bloom só analisado, soluções exatas |
-
-## Revisão pelos seis critérios da rubrica
-
-| Critério | Peso | Material para revisão e limite |
+| Requisito do PDF | Evidência encontrada | Situação |
 |---|---|---|
-| Análise das dez estratégias | 25% | analise_teorica.md; inclui deduções, hipóteses, domínio limitado e recursos separados |
-| Justificativa do par | 10% | seção Escolha e contrato, comparação com as outras oito; aprovação pendente |
-| Implementação e instrumentação em Pascal | 20% | fontes C, testes, frames, desmontagem e sanitizadores; C precisa ser aceito pelo professor |
-| Dados e coerência teoria/prática | 20% | 42 medições, seis resumos, gráficos e discussão; máquina da referência pendente |
-| Estratégias exageradas e extrapolação | 15% | quatro cálculos explícitos, oito curvas e custos hipotéticos auditáveis |
-| Relatório, recomendação e comunicação | 10% | PDF completo, fontes editáveis, recomendações por cliente e roteiro oral |
+| §1–2: análise de tempo e espaço de dez estratégias | Dez seções em analise_teorica.md, provas e auditoria individual | Atendido |
+| §2: distinguir pilha de heap e outros recursos | Metodologia, .su, desmontagem, modelos e auditoria separam pilha, heap, entrada, processo e disco | Atendido |
+| §2: relacionar teoria e experimentos | CSV real, dispersão, duas curvas medidas e oito modelos com hipóteses | Atendido |
+| §2/§9: instrumentação em Pascal | Código e evidências em C; §6 permite escolha, objetivos/rubrica citam Pascal | Parcial |
+| §3: todos os integrantes conseguem explicar o trabalho | Roteiro e perguntas disponíveis; desempenho oral individual não observado | Não verificável |
+| §3/§4.3: aprovação prévia do par | Nenhum comprovante de aprovação fornecido | Não verificável |
+| §3: recomendação de C/Python | C para ambas e Python na automação; trata-se de recomendação, não obrigação | Atendido |
+| §4.1: inteiros de 16 bits, 0–65535 | uint16_t; geração e testes de extremos e domínio completo | Atendido |
+| §4.1: n=1000,100000,10000000 | 42 rodadas medidas e testes nas três escalas; 7 rodadas por algoritmo/n | Atendido |
+| §4.1: Embarca com ≤256 B extras para todo n | Caminho estático do build local: 48+32+16=96 B, sem heap ou recursão; independente de n | Atendido |
+| §4.1/§8: Datacenter com n=10⁷ em <2 s na referência | Medições locais abaixo de 2 s; máquina da disciplina indisponível | Parcial |
+| §4.1: exatidão | Invariantes e 3502 casos por algoritmo confrontados com histograma independente | Atendido |
+| §4.1/§6: falso positivo ≤1% para solução probabilística | Não se aplica às duas soluções exatas; Bloom é apenas análise | Atendido |
+| §4.2/§4.3: melhor, médio, pior e hipóteses | Deduções individuais; média não definida sem distribuição; O separado de Θ | Atendido |
+| §4.2/§4.3: adequação de cada estratégia aos dois clientes | Análise e auditoria com memória e tempo prático/formal separados | Atendido |
+| §4.3: exatamente duas estratégias implementadas | heap.c e bitmap.c; histograma exclusivo de testes; outras oito só modeladas | Atendido |
+| §4.3: justificar as duas escolhas | Comparação com força bruta, hash, árvore, Bloom e variantes de ordenação | Atendido |
+| §4.3: oito extrapolações no mesmo gráfico das medidas | tempo.png/PDF: dez legendas; painel completo mantém expoentes astronômicos | Atendido |
+| §5: quatro rejeições quantitativas | Exemplos no relatório e calculos_quantitativos.csv nas três escalas | Atendido |
+| §5: cenários pequenos/especiais e restrições violadas | Análise distingue entrada ordenada, iguais, n pequeno e ausência de teto formal de disco/tempo Embarca | Atendido |
+| §6: linguagem à escolha | Implementações em C; confirmação da divergência com Pascal depende do professor | Parcial |
+| §6: demonstração dos dois algoritmos nas três escalas | make bench executa seis combinações; main imprime segundos e RSS; coletor exibe medianas e grava memória do algoritmo | Atendido |
+| §6/§8: vazio e sem duplicatas sem erro | NULL/0, n=0 nos testes, unitário, 65536 valores distintos crescentes/decrescentes | Atendido |
+| §7: estrutura src, docs, dados e relatorio.pdf | Arquivos presentes e validados | Atendido |
+| §7: ZIP ou Git | Ambos produzidos; manifesto SHA-256 confere o ZIP | Atendido |
+| §8: pequenos n≤10 com e sem duplicatas | Sete exemplos manuais e grade exaustiva 0–7, com validação independente | Atendido |
+| §8: memória instrumentada por n | Frames static GCC usados para limite válido para todos os n, mais observação de RSS por rodada | Atendido |
+| §8: coerência gráfica | CSVs, quartis, manifesto gráfico, tabelas e fontes do PDF conferidos; inspeção visual | Atendido |
+| §9: relatório/recomendação | PDF e fonte editável, recomendação por cliente e limitações explícitas | Atendido |
+| §10: decisões documentadas e dúvidas levadas ao professor | Decisões documentadas; consulta ao professor não comprovada | Parcial |
+| Reprodutibilidade complementar | Makefile, dependências, README, logs e hashes da coleta | Atendido |
 
-A soma dos pesos é 100%. Não se estima nota: ela depende do professor e das pendências acima, especialmente linguagem e máquina de referência.
+## Conferência dos seis critérios da rubrica
+
+| Critério | Peso | Evidência e limitação | Situação |
+|---|---|---|---|
+| Análise das dez estratégias | 25% | Deduções, casos, hipóteses, recursos e comparação dos clientes | Atendido |
+| Justificativa do par | 10% | Decisões técnicas fundamentadas; aprovação externa não demonstrada | Parcial |
+| Implementação e instrumentação em Pascal | 20% | Duas soluções em C compiladas/testadas, .su e desmontagem; linguagem depende de confirmação, código sem comentários conforme solicitação | Parcial |
+| Dados e coerência teoria/prática | 20% | Medições reais e modelos explícitos; máquina da referência não acessível | Parcial |
+| Estratégias exageradas e extrapolação | 15% | Contas das quatro, modelos das oito e cenários especiais | Atendido |
+| Relatório, recomendação e comunicação | 10% | PDF, fontes, apresentação e recomendações; defesa oral não avaliada | Parcial |
+
+Pesos somam 100%. Nenhum artefato obrigatório de entrega foi identificado como ausente após as correções. Isso não elimina as pendências externas nem garante nota, aprovação de linguagem ou cumprimento do prazo na máquina da disciplina.

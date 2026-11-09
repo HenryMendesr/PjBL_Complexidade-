@@ -1,0 +1,6 @@
+heap   n=    1000 mediana=0.000016s u=996
+bitmap n=    1000 mediana=0.000001s u=996
+heap   n=  100000 mediana=0.008639s u=51485
+bitmap n=  100000 mediana=0.000325s u=51485
+heap   n=10000000 mediana=1.623778s u=65536
+bitmap n=10000000 mediana=0.006033s u=65536

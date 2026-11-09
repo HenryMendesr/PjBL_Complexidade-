@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 
-import csv, io, json, platform, statistics, subprocess, shutil
+import csv, io, json, platform, statistics, subprocess, shutil, hashlib
+from datetime import datetime, timezone
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 def cmd(*a): return subprocess.check_output(a,cwd=ROOT,text=True)
 def main():
     rows=[]
-    env={'plataforma':platform.platform(),'maquina':platform.machine(),
+    subprocess.run(['make','all'],cwd=ROOT,check=True)
+    env={'coleta_utc':datetime.now(timezone.utc).isoformat(),
+         'fontes_sha256':{str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted((ROOT/'src').glob('*')) if p.is_file()},
+         'binario_sha256':hashlib.sha256((ROOT/'build/benchmark').read_bytes()).hexdigest(),
+         'plataforma':platform.platform(),'maquina':platform.machine(),
          'cpu':cmd('lscpu'),'compilador':cmd('gcc','--version'),
          'flags':next(l for l in (ROOT/'Makefile').read_text().splitlines() if l.startswith('CFLAGS')),
          'python':platform.python_version(),'repeticoes':7,'aquecimentos':1,

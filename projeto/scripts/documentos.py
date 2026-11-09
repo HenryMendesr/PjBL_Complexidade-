@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import csv, json, math, re, statistics
+import csv, json, math, re, statistics, hashlib
 from pathlib import Path
 from xml.sax.saxutils import escape
 import matplotlib
@@ -45,7 +45,7 @@ for k,alg in enumerate(['heap','bitmap']):
     rr=[r for r in rows if r['algoritmo']==alg]
     axs[0].plot([int(r['n']) for r in rr],[lg(float(r['extra_conservador_bytes'])) for r in rr],'o-',color=cols[k],linewidth=2,label=alg+' — GCC + margem')
 axs[0].axhline(lg(256),color='black',alpha=.4,label='256 B')
-axs[0].set(yscale='symlog',ylabel='log10(RAM extra em bytes), eixo symlog',title='RAM: pilha + heap; subconjuntos materializados')
+axs[0].set(yscale='symlog',ylim=(0,None),ylabel='log10(RAM extra em bytes), eixo symlog',title='RAM: pilha + heap; subconjuntos materializados')
 axs[1].plot(ns,ns*2,label='Vetor de entrada (calculado)')
 axs[1].plot(ns,ns*32768.5,'--',label='Disco unário esperado (calculado)')
 for alg in ['heap','bitmap']:
@@ -56,6 +56,14 @@ axs[1].legend(fontsize=8)
 for ax in axs:ax.set_xscale('log');ax.set_xlabel('n (leituras)');ax.grid(True,alpha=.2)
 h,l=axs[0].get_legend_handles_labels();fig.legend(h,l,loc='lower center',ncol=3,fontsize=8)
 fig.tight_layout(rect=(0,.21,1,.96));fig.savefig(R/'graficos/memoria.png');fig.savefig(R/'graficos/memoria.pdf');plt.close(fig)
+manifest={
+    'entradas_sha256':{path:hashlib.sha256((R/path).read_bytes()).hexdigest() for path in ['dados/resumo.csv','scripts/modelos.py','scripts/documentos.py']},
+    'saidas_sha256':{path:hashlib.sha256((R/path).read_bytes()).hexdigest() for path in ['graficos/tempo.png','graficos/tempo.pdf','graficos/memoria.png','graficos/memoria.pdf','dados/previsoes_log10.csv']},
+    'pontos_medidos':[{'algoritmo':row['algoritmo'],'n':int(row['n']),'mediana_s':float(row['mediana_s']),'min_s':float(row['min_s']),'max_s':float(row['max_s']),'extra_conservador_bytes':int(row['extra_conservador_bytes']),'rss_pico_kib':int(row['rss_pico_kib'])} for row in rows],
+    'estrategias_extrapoladas':names,'grade_n':[int(n) for n in ns],
+    'painel_completo':'log10 da grandeza sobre eixo symlog; nenhuma curva descartada'}
+(R/'dados/manifesto_graficos.json').write_text(json.dumps(manifest,indent=2,ensure_ascii=False))
+
 
 env=json.loads((R/'dados/ambiente.json').read_text())
 cpu=next((l.split(':',1)[1].strip() for l in env['cpu'].splitlines() if l.startswith('Model name:')),'ver ambiente.json')
@@ -69,7 +77,7 @@ result+='\nO RSS é o máximo residente de cada processo Linux, inclui dois veto
 parts=['# PjBL: Duas empresas, duas restrições\n\nDeduplicação de leituras de sensores — relatório técnico.\n\nIntegrantes: Henry Rodrigues, Rafael Maluf e Matheus.\n\n',
 (R/'docs/fundamentacao_matematica.md').read_text(),(R/'docs/analise_teorica.md').read_text(),(R/'docs/metodologia.md').read_text(),result,
 (R/'docs/modelos.md').read_text(),'\n![Tempo](graficos/tempo.png)\n\n![Memória](graficos/memoria.png)\n\n',
-(R/'docs/discussao.md').read_text(),(R/'docs/checklist.md').read_text(),(R/'docs/apresentacao.md').read_text()]
+(R/'docs/discussao.md').read_text(),(R/'docs/auditoria.md').read_text(),(R/'docs/checklist.md').read_text(),(R/'docs/apresentacao.md').read_text()]
 source='\n\n'.join(parts);(R/'docs/relatorio.md').write_text(source)
 
 font='/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'

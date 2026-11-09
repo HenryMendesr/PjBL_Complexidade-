@@ -16,7 +16,7 @@ Para o vetor original A=(a₀,…,aₙ₋₁), defina S(A)={aᵢ : 0≤i<n}. A s
 
 Para n=0, S é vazio e u=0. Para n>0, 1≤u≤min(n,D), D=65536. O princípio das gavetas prova que n>D implica ao menos uma repetição; não prova que todos os D valores ocorreram. No modelo uniforme independente, E[u]=D[1-(1-1/D)ⁿ], mas esse valor é uma esperança, não o u de uma entrada concreta. Prova: o indicador Iₓ de presença de x tem esperança 1-(1-1/D)ⁿ; somar sobre os D valores e usar linearidade da esperança. Independência entre os indicadores não é necessária.
 
-A leitura de n elementos é necessária no pior caso para qualquer algoritmo exato, sem certificação prévia da entrada: se uma posição não for inspecionada, pode-se alterá-la para um valor ausente e mudar a resposta. Portanto há limite inferior Ω(n) no modelo geral de acesso às leituras. Isso situa o bitmap em Θ(n) com domínio fixo, assintoticamente ótimo nesse modelo; não afirma que sua constante seja a melhor em todo hardware.
+A leitura de n elementos é necessária no pior caso para qualquer algoritmo exato, sem certificação prévia da entrada. Considere a entrada toda igual a zero: se uma posição não for inspecionada, pode-se alterá-la para um e mudar a resposta. Esse argumento usa D≥2 e uma entrada que não cobre o domínio; não diz que toda instância obriga ler tudo, pois uma vez encontrados todos os D valores seria possível encerrar. Portanto há limite inferior Ω(n) no modelo geral de acesso às leituras. Isso situa o bitmap em Θ(n) com domínio fixo, assintoticamente ótimo nesse modelo; não afirma que sua constante seja a melhor em todo hardware.
 
 ## 2. Prova de corretude do Heap Sort e da compactação
 
@@ -48,7 +48,7 @@ A aproximação nu/2 para a curva é um cenário de buscas com posições aproxi
 
 **Bogosort.** Há n! permutações de objetos rotulados, mas ∏cⱼ! delas produzem a sequência de valores ordenada. Portanto q=∏cⱼ!/n!. Embaralhamentos uniformes independentes dão distribuição geométrica: E[tentativas]=1/q. Para uma entrada inicialmente desordenada, esse é o número esperado de embaralhamentos até o primeiro sucesso; a checagem inicial acrescenta apenas uma verificação. Se já ordenada, a função hipotética termina imediatamente. Tempo esperado cn/q é modelo de custo por tentativa, não garantia. Com n=1000 distintos, log₁₀(1/q)=2567,604644222. Para n>D usar n! sem dividir pelas multiplicidades superestima o número de tentativas; usamos lgamma para calcular o logaritmo sem overflow.
 
-**Subconjuntos.** Cada posição tem duas decisões independentes, logo 2ⁿ folhas e 2ⁿ⁺¹-1 nós na árvore binária completa. Cada posição pertence a exatamente metade dos subconjuntos: Σ(t=0..n)t binom(n,t)=n2ⁿ⁻¹. Com 2 B por elemento, a materialização exige n2ⁿ B só de payload. Assim, materializar e copiar todos os elementos custa Θ(n2ⁿ) tempo e espaço, além de descritores e pilha Θ(n). Somente enumerar em streaming custa Θ(2ⁿ) visitas e pode usar heap zero; não confundir as duas variantes. As curvas do relatório usam materialização para AMBOS tempo e RAM. Em n=1000, log₁₀(bytes)=304,029995664, e não apenas log₁₀(2¹⁰⁰⁰)=301,029995664.
+**Subconjuntos.** Cada posição tem duas decisões independentes, logo 2ⁿ folhas e 2ⁿ⁺¹-1 nós na árvore binária completa. Cada posição pertence a exatamente metade dos subconjuntos: Σ(t=0..n)t binom(n,t)=n2ⁿ⁻¹. Com 2 B por elemento, a materialização exige n2ⁿ B só de payload. Assim, materializar e copiar todos os elementos custa Θ(n2ⁿ) tempo e espaço, além de descritores e pilha Θ(n). Somente enumerar em streaming custa Θ(2ⁿ) visitas e pode usar heap zero; não confundir as duas variantes. As curvas do relatório usam materialização para tempo e RAM; a RAM soma ao payload descritores e frames nominais, conforme docs/modelos.md. Em n=1000, log₁₀(bytes)=304,029995664, e não apenas log₁₀(2¹⁰⁰⁰)=301,029995664.
 
 **Unário.** Seja Lⱼ=xⱼ+1 o tamanho em bytes do registro j, com j=1,…,n. Gravar todos os registros custa S=ΣLⱼ. Consultar todos os registros anteriores para cada posição, sem parar cedo, relê o registro j exatamente n-j vezes. O tráfego idealizado total é V=Σ(n-j+1)Lⱼ. Essa identidade não exige independência. Para comprimentos de mesma esperança μ=32768,5, a linearidade dá E[V]=μn(n+1)/2, e E[S]=μn. A expressão inclui a gravação inicial e todas as releituras, sem contar novamente um registro corrente que já está disponível no vetor. Para n=10⁷: E[V]=1638425163842500000 B, aproximadamente 1,638425164×10¹⁸ B, e E[V]/10⁹≈1,638×10⁹ s a 1 GB/s. Não estão incluídos syscalls, seeks, comparar contadores e outros custos; esse throughput é hipótese otimista. O custo completo de CPU inclui Ω(n) acessos ao vetor e o custo de contar símbolos; no domínio fixo, o modelo de varredura completa tem Θ(n²) tempo de I/O em melhor e pior caso, com constantes dependentes dos comprimentos.
 
@@ -67,6 +67,8 @@ Embarca: provar espaço constante não basta; a constante precisa caber em 256 B
 Curvas hipotéticas misturam limites, esperanças e cenários declarados: não são oito benchmarks. As multiplicidades balanceadas de Bogosort são uma escolha pessimista de multiplicidades, não a esperança das entradas uniformes medidas. Tempos nominais a 1 ns/op e I/O a 1 GB/s são condições de modelos; não são constantes inferidas de O. As transformações dos eixos preservam os expoentes astronômicos sem converter previsões em evidência empírica.
 
 As verificações numéricas deste capítulo estão em scripts/validar_matematica.py, com registro em dados/revisao_matematica.txt. Elas conferem identidades e arredondamentos em casos pequenos por contagem independente; não implementam uma terceira solução de deduplicação.
+
+O multinomial de Bogosort é máximo entre multiplicidades balanceadas. Se duas contagens satisfazem a≥b+2, transferir um elemento da maior para a menor altera o produto de fatoriais pelo fator (b+1)/a<1; portanto aumenta o número de permutações distintas. Repetir essa operação chega às contagens floor(n/D) e ceil(n/D). Isso justifica o cenário extremo escolhido, sem confundi-lo com a média de uma amostra uniforme.
 
 
 # Análise teórica — Duas empresas, duas restrições
@@ -87,7 +89,7 @@ Pilha Θ(1), heap 0, disco 0. Pequeno número de índices pode caber nos 256 B, 
 
 ## 2. Ordenação e varredura
 
-Ordenar agrupa iguais; manter o primeiro de cada bloco e compactar. O(n) da varredura soma-se ao custo da ordenação. Na implementação, construir heap custa Θ(n): a soma de alturas é O(n), pois há menos nós em níveis altos. Cada uma de n-1 extrações pode percorrer log₂n níveis: O(n log n). Para chaves distintas e ordem não favorável, tempo médio e pior Θ(n log n); com todos iguais, o sift encerra imediatamente e o melhor é Θ(n). O limite superior continua válido com repetições; não se deve prometer Θ(n log n) em toda entrada.
+Ordenar agrupa iguais; manter o primeiro de cada bloco e compactar. O(n) da varredura soma-se ao custo da ordenação. Na implementação, construir heap custa Θ(n): a soma de alturas é O(n), pois há menos nós em níveis altos. Cada uma de n-1 extrações pode percorrer log₂n níveis: O(n log n). Para chaves distintas e ordem não favorável, tempo médio (permutações uniformes de chaves distintas) e pior Θ(n log n); com todos iguais, o sift encerra imediatamente e o melhor é Θ(n). O limite superior continua válido com repetições; não se deve prometer Θ(n log n) em toda entrada.
 
 Heap Sort iterativo usa pilha Θ(1), heap 0, disco 0, altera ordem para crescente. A prova de corretude combina: sift restaura o heap; a raiz máxima vai à extremidade definitiva; após ordenar, valores diferentes do último emitido são exatamente os únicos. Quick Sort usual tem média Θ(n log n), pior Θ(n²), pilha média Θ(log n) e pior Θ(n), sem garantir 256 B. Merge Sort usual tem Θ(n log n) em todos os casos e vetor auxiliar Θ(n), além de pilha Θ(log n). Não são implementados aqui. Embarca: Heap Sort atende espaço neste build; Datacenter: possível, mas trabalho e acessos são maiores que os do bitmap, sem benefício exigido pelo problema.
 
@@ -95,29 +97,29 @@ Heap Sort iterativo usa pilha Θ(1), heap 0, disco 0, altera ordem para crescent
 
 Consultar cada x; inserir e emitir apenas quando ausente. Com fator de carga controlado, boa dispersão e hash universal/randomizado, consultas esperadas O(1) e inserções amortizadas O(1), total esperado Θ(n); melhor Θ(n). Redimensionar ocasiona operação individual Θ(u), coberta pela análise amortizada. Colisões adversas com listas ou sondagem podem levar a O(nu), O(n²) genérico; não se supõe árvore nos buckets. Domínio fixo dá O(nD) nesse pior caso.
 
-Heap Θ(u) entradas (incluindo buckets e fator de carga), pilha Θ(1) na versão iterativa, disco 0. Modelo dos gráficos: 16 B por distinto, hipótese otimista de chave, estado, alinhamento e folga; bibliotecas podem usar mais. Com D cheio, cerca de 1 MiB, contra 8 KiB do bitmap. Embarca: não garante 256 B para todos n/u. Datacenter: plausível, mas não há razão para aceitar colisões, alocações e overhead neste domínio. Para u muito pequeno cabe um conjunto diminuto; isso não garante o limite geral.
+Heap Θ(u+1) entradas (incluindo buckets e fator de carga), pilha Θ(1) na versão iterativa, disco 0. Modelo dos gráficos: 16 B por distinto, hipótese otimista de chave, estado, alinhamento e folga; bibliotecas podem usar mais. Com D cheio, cerca de 1 MiB, contra 8 KiB do bitmap. Embarca: não garante 256 B para todos n/u. Datacenter: plausível, mas não há razão para aceitar colisões, alocações e overhead neste domínio. Para u muito pequeno cabe um conjunto diminuto; isso não garante o limite geral.
 
 ## 4. Árvore balanceada (AVL/Red-Black)
 
-Buscar x e inserir somente se ausente; emitir no prefixo ou percorrer em ordem. Altura O(log(u+1)), pelo invariante de balanceamento; logo O(n log(u+1)+u) no limite superior. Com u≈n e chaves diversas, médio/pior Θ(n log n) genérico. Melhor Θ(n) com todos iguais; uma entrada com muitos acertos na raiz também pode custar Θ(n). Não se afirma limite inferior log u para toda distribuição. Rotações custam O(1) por ajuste; manutenção do caminho cabe no limite da altura.
+Buscar x e inserir somente se ausente; emitir no prefixo ou percorrer em ordem. Altura O(log(u+1)), pelo invariante de balanceamento; logo O(n log(u+1)+u) no limite superior. Com u≈n, a construção por inserções exige Θ(n log n) no modelo usual de comparações; para acessos uniformes entre u chaves numa árvore de altura logarítmica, o custo esperado por busca é Θ(log(u+1)). Sem distribuição de acessos, o caso médio não é definido. Melhor Θ(n) com todos iguais; uma entrada com muitos acertos na raiz também pode custar Θ(n). Não se afirma limite inferior log u para toda distribuição. Rotações custam O(1) por ajuste; manutenção do caminho cabe no limite da altura.
 
-Heap Θ(u) nós; modelo de 32 B/nó para dois ponteiros, pai/balanceamento, chave e alinhamento, cerca de 2 MiB no domínio completo. Pilha Θ(log u) se recursiva; iterativa pode usar pai e Θ(1) de pilha. Disco 0. Embarca: nós e possível pilha violam a garantia para u grande. Datacenter: determinística e exata, mas perseguição de ponteiros e log u são desnecessários frente ao acesso direto. Quando se precisa de consultas ordenadas dinâmicas em domínio amplo, ela tem utilidade.
+Heap Θ(u+1) bytes no modelo de palavra fixa, com Θ(u) nós e administração constante; modelo de 32 B/nó para dois ponteiros, pai/balanceamento, chave e alinhamento, cerca de 2 MiB no domínio completo. Pilha Θ(log(u+1)) se recursiva; iterativa pode usar pai e Θ(1) de pilha. Disco 0. Embarca: nós e possível pilha violam a garantia para u grande. Datacenter: determinística e exata, mas perseguição de ponteiros e log u são desnecessários frente ao acesso direto. Quando se precisa de consultas ordenadas dinâmicas em domínio amplo, ela tem utilidade.
 
 ## 5. Bitmap
 
 Associar um bit a cada valor. Inicializar D bits em zero, ler cada x, testar bit e emitir/marcar somente se zero. No código, cada palavra tem 64 bits; índice x>>6 e máscara 1<<(x&63). Invariante: o bit representa exatamente os valores já visitados. Como u≤i+1, compactar não sobrescreve elementos futuros. Retorna únicos na ordem das primeiras ocorrências.
 
-Tempo Θ(n+D/w), w=64, nos três casos, pois sempre inicializa 1024 palavras e lê n elementos. Com D fixo, Θ(n+1); o atalho usual O(n) pressupõe n≥1. A variante que primeiro marca todos e depois percorre o domínio devolve ordem crescente em Θ(n+D), mas NÃO é o código entregue. Espaço D/8=8192 B mais escalares: aqui automático, na pilha; heap 0 e disco 0. Ser constante em n não significa caber em 256 B. Embarca: rejeitado, 32 vezes o orçamento só em bits. Datacenter: escolha exata, linear, sem colisões, com conjunto de trabalho pequeno. Os dados locais apoiam a escolha, mas a máquina de referência ainda precisa ser testada.
+Tempo Θ(n+ceil(D/w)), w=64, nos três casos, pois sempre inicializa 1024 palavras e lê n elementos. Com D fixo, Θ(n+1); o atalho usual O(n) pressupõe n≥1. A variante que primeiro marca todos e depois percorre o domínio devolve ordem crescente em Θ(n+D), mas NÃO é o código entregue. Espaço D/8=8192 B mais escalares: aqui automático, na pilha; heap 0 e disco 0. Ser constante em n não significa caber em 256 B. Embarca: rejeitado, 32 vezes o orçamento só em bits. Datacenter: escolha exata, linear, sem colisões, com conjunto de trabalho pequeno. Os dados locais apoiam a escolha, mas a máquina de referência ainda precisa ser testada.
 
 ## 6. Filtro de Bloom
 
 m bits, k funções de hash; um valor é considerado presente se todos seus k bits estiverem marcados. Se algum estiver zero, emitir e marcar. Após u inserções, com hashes uniformes independentes, p≈(1-exp(-ku/m))^k. O ótimo k≈(m/u)ln2, m≈-u ln p/(ln2)². Para u=65536 e p=0,01: m≈628167 bits (arredondar a bytes), cerca de 78521 B no ótimo contínuo. Com k inteiro igual a 7, deve-se aumentar para 628684 bits, arredondados a 78586 B (628688 bits), para p≈0,99997% na fórmula aproximada. A fórmula de dimensionamento com k fixo é m≥-ku/ln(1-p^(1/k)); arredondar k sem ajustar m pode passar ligeiramente de 1%. Para u=1000: cerca de 1199 B, ainda acima de 256 B. Dimensionar por n=10⁷ desperdiçaria memória: só existem D chaves. Com m=2048 bits e u=D, k ótimo seria menor que 1; k=1 já dá p≈1-exp(-32), quase 100%.
 
-Melhor/médio/pior Θ(nk+m/w) numa variante que avalia sempre os k hashes; com interrupção antecipada o custo varia entre Ω(n+m/w) e O(nk+m/w). Para k fixo é linear. Pilha Θ(1) escalares se bitset no heap, heap Θ(m) bits, disco 0; um bitset automático transfere esse custo para a pilha. Falso positivo significa descartar uma leitura inédita e perder um valor na saída; não é duplicata remanescente. Não há falso negativo na consulta ao filtro para valores inseridos sob essas hipóteses. p por consulta inédita não é chance de saída inteira correta, nem um limite determinístico em toda sequência. O PDF admite probabilístico com taxa declarada ≤1%; aqui preferimos exatidão. Embarca não comporta o dimensionamento; Datacenter pode aceitar aproximação em outros problemas, mas neste domínio o bitmap é menor e exato. Não implementado.
+Melhor/médio/pior Θ(nk+m/w) numa variante que avalia sempre os k hashes; com interrupção antecipada o custo varia entre Ω(n+m/w) e O(nk+m/w). Para k fixo é linear. Pilha Θ(1) escalares se bitset no heap, heap Θ(m) bits, disco 0; um bitset automático transfere esse custo para a pilha. Falso positivo significa descartar uma leitura inédita e perder um valor na saída; não é duplicata remanescente. Não há falso negativo na consulta ao filtro para valores inseridos sob essas hipóteses. Quando u=D, não há consulta inédita possível dentro do domínio; o dimensionamento por D é uma capacidade conservadora para os estados anteriores. p por consulta inédita não é chance de saída inteira correta, nem um limite determinístico em toda sequência. O PDF admite probabilístico com taxa declarada ≤1%; aqui preferimos exatidão. Embarca não comporta o dimensionamento; Datacenter pode aceitar aproximação em outros problemas, mas neste domínio o bitmap é menor e exato. Não implementado.
 
 ## 7. Bogosort e varredura
 
-Checar se está ordenado; se não, embaralhar uniformemente (Fisher-Yates in-place) e repetir. Depois compactar vizinhos. Para multiplicidades c₁,…,cᵤ, a probabilidade de uma permutação de elementos rotulados estar não decrescente é q=∏cⱼ!/n!. O número esperado de tentativas geométricas é 1/q=n!/∏cⱼ!. Com distintos, n!; com todos iguais, 1. Se embaralhar e checar custam Θ(n), tempo esperado O(n/q); se já ordenado, melhor Θ(n). Pior caso não tem teto finito: o processo pode continuar indefinidamente. Para modelo médio é preciso declarar a distribuição das multiplicidades e a aleatoriedade dos embaralhamentos.
+Checar se está ordenado; se não, embaralhar uniformemente (Fisher-Yates in-place) e repetir. Depois compactar vizinhos. Para multiplicidades c₁,…,cᵤ, a probabilidade de uma permutação de elementos rotulados estar não decrescente é q=∏cⱼ!/n!. O número esperado de tentativas geométricas é 1/q=n!/∏cⱼ!. Com distintos, n!; com todos iguais, 1. Se embaralhar e checar custam Θ(n), tempo esperado Θ(n/q) para uma entrada inicialmente desordenada, sob embaralhamentos uniformes independentes; se já ordenado, melhor Θ(n). Quando q<1, o número de tentativas tem suporte ilimitado, portanto não há teto finito para o pior tempo. Se todos iguais, a checagem inicial custa Θ(n) e não há embaralhamento. Para modelo médio é preciso declarar a distribuição das multiplicidades e a aleatoriedade dos embaralhamentos.
 
 Pilha Θ(1), heap 0 e disco 0 se embaralhamento e gerador forem iterativos de estado fixo. RNG e ABI devem caber no orçamento, não basta dizer O(1). Sem garantia temporal; não há orçamento explícito Embarca, mas o tempo geral é impraticável. Datacenter não tem garantia de 2 s. Domínio fixo não salva o método: com frequências balanceadas, o multinomial continua crescendo aproximadamente como Dⁿ dividido por fator polinomial para D fixo. Casos ordenados ou minúsculos podem terminar rápido.
 
@@ -175,13 +177,17 @@ Compilação C11 com GCC, -O3, -Wall -Wextra -Wpedantic -Werror. Para tornar os 
 
 Cada combinação algoritmo/n roda em um processo separado. Entradas uniformes aproximadas são os 16 bits baixos do xorshift32 de semente decimal 20261108, reiniciada para cada processo. O gerador não é criptográfico. Mesmos dados são usados nos dois algoritmos. Executa-se um aquecimento e sete rodadas medidas; o vetor original é copiado antes de cada rodada. O relógio CLOCK_MONOTONIC fornece tempo de parede com nanossegundos na representação; isso não promete precisão de 1 ns. A janela inclui chamada e retorno da deduplicação, construção do heap ou limpeza do bitmap e compactação. Exclui malloc dos vetores, geração, memcpy, oráculo e printf. Para n pequeno o overhead do relógio é relevante e não foi artificialmente subtraído. Estatística: mediana; dispersão por mínimo/máximo e quartis exclusivos de statistics.quantiles. Não são intervalos de confiança.
 
-Corretude: testes manuais, domínio completo crescente e decrescente, 200 casos pseudoaleatórios menores, e quatro distribuições em cada escala obrigatória (iguais, ciclos crescentes, ciclos decrescentes, pseudoaleatória). São 222 casos para cada algoritmo, além das chamadas NULL/0. O histograma de teste verifica existência de cada saída, ausência de repetição, contagem exata e ordem contratada. Validação também é feita após cada rodada do benchmark. Asserções permanecem ativas, sem -DNDEBUG. AddressSanitizer e UndefinedBehaviorSanitizer são executados em build separado: seus tempos e frames não são usados como benchmark.
+Corretude: testes manuais, domínio completo crescente e decrescente, 200 casos pseudoaleatórios menores, e quatro distribuições em cada escala obrigatória (iguais, globalmente ordenados, globalmente inversos, pseudoaleatória). A grade exaustiva acrescenta 3280 sequências sobre {0,64,65535} de tamanho 0 a 7, e há sentinelas antes/depois do vetor. São 3502 casos para cada algoritmo, além das chamadas NULL/0. O histograma de teste verifica existência de cada saída, ausência de repetição, contagem exata e ordem contratada. Validação também é feita após cada rodada do benchmark. Asserções permanecem ativas, sem -DNDEBUG. AddressSanitizer e UndefinedBehaviorSanitizer são executados em build separado: seus tempos e frames não são usados como benchmark.
 
 A memória de trabalho foi auditada por -fstack-usage nos objetos realmente usados na medição, não pela soma de sizeof de variáveis. Frames reportados neste GCC: heap_unique 48 B e sift 32 B, simultâneos no caminho mais profundo: 80 B. Adiciona-se margem conservadora de 16 B de fronteira de chamada/ABI, total 96 B. bitmap_unique tem frame de 8208 B, mais a mesma margem: 8224 B. Os frames incluem ponteiros/argumentos salvos, temporários, alinhamento e salvamento de registradores conforme gerados pelo compilador. Arquivos .su são preservados em dados/evidencias/; desmontagem está em dados/desmontagem.txt. O compilador classifica todos os frames como static. Não há recursão nem chamadas de sift para outras funções. nm -u confirma ausência de símbolos externos nos dois objetos; inspeção da fonte e desmontagem confirma heap dinâmico de 0 B. Esse zero é evidência estática do binário, não amostragem de RSS nem profiler de malloc.
 
 O limite de 96 B independe de n, incluindo os três tamanhos testados. A verificação automatizada falha se a soma mais margem superar 256 B. Isso demonstra a restrição no build local x86-64, mas não em qualquer ABI ou compilador. Interrupções, pilha do sistema operacional, rotina chamadora/gerador e redirecionamentos de runtime não fazem parte da subárvore do algoritmo. Em firmware real, medir novamente com o compilador do alvo e reservar a pilha de interrupções conforme requisitos do dispositivo. Com sanitizadores ou instrumentação diferente, os frames mudam.
 
 O bitmap foi posto na pilha por simplicidade e reentrância; 8 KiB são adequados ao ambiente local e proibidos para Embarca. Transferi-lo para heap não reduziria memória EXTRA. O vetor original e sua cópia usam 4n B na infraestrutura; o cliente precisa apenas do vetor de 2n B. O oráculo usa histograma e auxiliares exclusivamente nos testes. getrusage fornece ru_maxrss em KiB no Linux, pico do processo incluindo essa infraestrutura; não é o consumo instantâneo do algoritmo. Dados calculados (2n, D/8), reportados pelo compilador (frames) e observados pelo SO (RSS) são identificados separadamente.
+
+A coleta atual registra instante UTC e hashes das fontes e do binário em ambiente.json. Os CSVs da versão anterior à auditoria estão em dados/historico/pre_auditoria/, identificados pelo commit de origem. Alterações de dados não são preenchidas manualmente: gráficos e tabelas são regenerados a partir da execução.
+
+Os índices, ponteiros e temporários que o compilador mantém em registradores não alocam RAM adicional. A desmontagem de heap.o não contém registradores vetoriais; mesmo contabilizando conservadoramente todos os 16 registradores gerais de 64 bits como armazenamento adicional, 96+16×8=224 B permanece abaixo de 256 B. Os 96 B apresentados nos resultados são o limite de RAM de pilha com margem, não essa contabilidade ampliada calculada.
 
 
 ## Resultados locais efetivamente medidos
@@ -190,12 +196,12 @@ CPU informada ao ambiente: AMD EPYC 9V74 80-Core Processor. Sistema: Linux-6.18.
 
 | Algoritmo | n | u | Mediana (s) | Mín–máx (s) | Q1–Q3 (s) | Extra conservador (B) | RSS pico (KiB) |
 |---|---|---|---|---|---|---|---|
-| heap | 1000 | 996 | 0.000015543 | 0.000014461–0.000045778 | 0.000014943–0.000027561 | 96 | 11904 |
-| bitmap | 1000 | 996 | 0.000001002 | 0.000000991–0.000001062 | 0.000000991–0.000001012 | 8224 | 11904 |
-| heap | 100000 | 51485 | 0.008639077 | 0.008214097–0.010335410 | 0.008412892–0.009500212 | 96 | 11904 |
-| bitmap | 100000 | 51485 | 0.000325342 | 0.000308507–0.001213317 | 0.000309929–0.000426512 | 8224 | 11904 |
-| heap | 10000000 | 65536 | 1.623778035 | 1.498388893–1.828633656 | 1.563083458–1.781125109 | 96 | 40192 |
-| bitmap | 10000000 | 65536 | 0.006033297 | 0.006005024–0.006242396 | 0.006009632–0.006099775 | 8224 | 40192 |
+| heap | 1000 | 996 | 0.000032508 | 0.000018718–0.000208229 | 0.000019359–0.000052508 | 96 | 12800 |
+| bitmap | 1000 | 996 | 0.000001012 | 0.000000992–0.000001051 | 0.000001002–0.000001031 | 8224 | 12800 |
+| heap | 100000 | 51485 | 0.008981933 | 0.008230120–0.010595884 | 0.008499539–0.010453874 | 96 | 12800 |
+| bitmap | 100000 | 51485 | 0.000331160 | 0.000325181–0.000374215 | 0.000329898–0.000363298 | 8224 | 12800 |
+| heap | 10000000 | 65536 | 1.794285846 | 1.612656371–1.925955623 | 1.688465706–1.877988920 | 96 | 40192 |
+| bitmap | 10000000 | 65536 | 0.006632755 | 0.006483575–0.006843317 | 0.006522121–0.006760154 | 8224 | 40192 |
 
 O RSS é o máximo residente de cada processo Linux, inclui dois vetores, oráculo, runtime e páginas tocadas. Não é memória extra do algoritmo e não deve ser subtraído do vetor para inferir a pilha. A inicialização do bitmap está dentro do cronômetro.
 
@@ -204,7 +210,7 @@ O RSS é o máximo residente de cada processo Linux, inclui dois vetores, orácu
 
 As oito estratégias não foram programadas nem cronometradas. Seus pontos são previsões ilustrativas, não afirmações de que executariam nesses tempos. Para tempo, usa-se custo nominal c=10⁻⁹ s por operação abstrata; não há calibração independente dessas operações. Um hash ou nó de árvore é modelado com 5 operações e Bloom com 7 hashes de custo c, escolha didática otimista. Não se derivou c de Big-O nem se ajustaram as curvas para garantir uma classificação. Multiplicar essas constantes por 0,1 ou 10 desloca os log₁₀ dos tempos em -1 ou +1, sem remover a explosão combinatória. Tráfego unário supõe 10⁹ B/s. Cache, branches, largura de banda e latência estão ausentes desses modelos; a incerteza é grande e não é expressa como erro estatístico.
 
-Nas curvas força bruta/hash/árvore/Bloom, u(n)=D[1-(1-1/D)ⁿ], esperança sob amostragem uniforme independente. O gerador real é determinístico e só aproxima essa hipótese. Os u reais são registrados, não substituídos pela esperança. Para Bogosort, as multiplicidades são balanceadas: q=floor(n/D), r=n mod D, com D-r contagens q e r contagens q+1. Quando n≤D, isso é uma entrada distinta (pior cenário de multiplicidades), diferente da distribuição empírica; não se pretende que todas as curvas sejam o tempo da mesma instância. Usar n! em n>D seria incorreto. O modelo de subconjuntos materializa todos os elementos para tempo e memória, com fator n em ambas as curvas. A variante de streaming é discutida separadamente na análise.
+Nas curvas força bruta/hash/árvore, u(n)=D[1-(1-1/D)ⁿ], esperança sob amostragem uniforme independente. O gerador real é determinístico e só aproxima essa hipótese. Os u reais são registrados, não substituídos pela esperança. Para Bogosort, as multiplicidades são balanceadas: q=floor(n/D), r=n mod D, com D-r contagens q e r contagens q+1. Quando n≤D, isso é uma entrada distinta (pior cenário de multiplicidades), diferente da distribuição empírica; não se pretende que todas as curvas sejam o tempo da mesma instância. Usar n! em n>D seria incorreto. O Bloom usa um filtro fixo de 78586 B, dimensionado para D distintos, tanto para o tempo de limpeza como para a RAM. O modelo de subconjuntos materializa todos os elementos para tempo e memória, com fator n em ambas as curvas. A variante de streaming é discutida separadamente na análise.
 
 Modelos de tempo em segundos:
 
@@ -217,11 +223,15 @@ Modelos de tempo em segundos:
 - Unário: [32768,5×n×(n+1)/2]/10⁹, gravar e varrer em média metade do arquivo por consulta; sem seeks e com comprimentos médios uniformes.
 - Matriz: cn², uma operação nominal por célula; não inclui alocação.
 
-RAM extra hipotética em bytes (não medidas): força bruta/Bogosort/unário 128 B de trabalho nominal; hash 16u+128; árvore 32u+128; Bloom ceil[-7u/ln(1-0,01^(1/7))/8]+128, com k=7 e correção discreta para a meta de 1%; subconjuntos n2ⁿ (elementos uint16_t, sem descritores, além da pilha Θ(n)); matriz ceil(n²/8)+128, empacotada. Para subconjuntos, o volume materializado domina a pilha nas escalas dos gráficos; não se deve interpretar isso como memória obrigatória de streaming. Unário usa disco separado n×32768,5 B esperado. Os 128 B são hipótese ilustrativa de escalares e buffer, não garantia de ABI. Comparações no relatório consideram também matrizes em bytes.
+RAM extra hipotética em bytes (não medidas): força bruta/Bogosort/unário 128 B de trabalho nominal; hash 16u+128; árvore 32u+128; Bloom 78586+128, com k=7 e capacidade de D distintos; subconjuntos (n+16)2ⁿ+16(n+1)+128 (payload n2ⁿ B, descritor nominal de 16 B por subconjunto, frames nominais de 16 B em n+1 níveis e 128 B de trabalho); matriz ceil(n²/8)+128, empacotada. Os descritores e frames dos subconjuntos são hipóteses de layout, não tamanhos medidos. A análise também apresenta o limite mínimo de payload n2ⁿ B; a curva soma os outros termos, sem misturá-los à variante de streaming. Unário usa disco separado n×32768,5 B esperado. Os 128 B são hipótese ilustrativa de escalares e buffer, não garantia de ABI. Comparações no relatório consideram também matrizes em bytes.
 
-A fonte scripts/documentos.py usa lgamma para fatoriais e expoentes em log₁₀ para 2ⁿ. dados/previsoes_log10.csv contém as oito curvas sem overflow e com unidade explícita. Em graficos/tempo.png, o painel esquerdo mostra segundos em escala log de 10⁻⁸ a 10⁶; as curvas fora dessa janela são continuadas integralmente no painel direito. O painel direito mostra o número log₁₀(segundos) sobre eixo symlog: valor 6 representa um milhão de segundos, valor 3000000 representa 10 elevado a três milhões de segundos, não três milhões de segundos. Essa segunda transformação permite ver simultaneamente números negativos (tempos <1 s), valores próximos de zero e expoentes enormes. Nenhuma curva inviável é removida.
+O módulo scripts/modelos.py usa lgamma para fatoriais e expoentes em log₁₀ para 2ⁿ. dados/previsoes_log10.csv contém as oito curvas sem overflow e com unidade explícita. Em graficos/tempo.png, o painel esquerdo mostra segundos em escala log de 10⁻⁸ a 10⁶; as curvas fora dessa janela são continuadas integralmente no painel direito. O painel direito mostra o número log₁₀(segundos) sobre eixo symlog: valor 6 representa um milhão de segundos, valor 3000000 representa 10 elevado a três milhões de segundos, não três milhões de segundos. Essa segunda transformação permite ver simultaneamente números negativos (tempos <1 s), valores próximos de zero e expoentes enormes. Nenhuma curva inviável é removida.
 
 As duas linhas sólidas com pontos são medianas medidas; barras no painel prático são mínimo/máximo. As outras oito linhas são modelos. graficos/memoria.png usa o mesmo tratamento de expoentes para RAM e outro painel em bytes para disco, entrada e RSS. O frame GCC mais a margem é constante para os dois algoritmos, e não uma medição dinâmica de pico a cada n. Sobreposições em curvas de RAM constante são esperadas; legenda e CSV permitem identificá-las.
+
+O domínio dos modelos é n inteiro positivo. A substituição de E[u] nas fórmulas de custo não calcula automaticamente E[T]: em particular, log(E[u]+1) difere de E[log(u+1)]. Para a árvore, a concavidade do log fornece E[log(u+1)]≤log(E[u]+1); para a força bruta, nu/2 é heurística de posição média, não esperança exata da fase de formação. Essas aproximações não são garantias de tempo.
+
+Nos volumes astronômicos, descritores de 16 B não significam que um computador de 64 bits conseguiria endereçar a estrutura. São custos nominais otimistas para evidenciar a inviabilidade. Endereçar um payload de ordem n2ⁿ requer Θ(n+log n) bits de endereço; uma máquina teórica de palavra crescente também teria de rever o custo das operações. O payload n2ⁿ B é uma contagem combinatória independente desses detalhes e já basta para a rejeição física. As previsões fora do espaço endereçável não são promessas de execução.
 
 
 
@@ -244,51 +254,122 @@ O Heap Sort também pode atender ao prazo local, mas isso não o torna a melhor 
 Pendências reais: aprovação do par, confirmação de C diante da rubrica que menciona Pascal e reprodução no hardware da disciplina. A checagem de pilha precisa ser refeita em qualquer novo alvo.
 
 
-# Checklist de entrega e validação
+# Auditoria técnica da entrega
 
-Legenda: CONCLUÍDO significa produzido e/ou verificado localmente; PENDENTE é uma exigência externa ainda não demonstrada. A checklist não equivale a nota atribuída.
+## Escopo e critério de verificação
 
-| Requisito | Situação e evidência |
-|---|---|
-| Interpretação do enunciado | CONCLUÍDO; docs/analise_teorica.md |
-| Domínio 0–65535 e n=10³,10⁵,10⁷ | CONCLUÍDO; uint16_t, CSV real e casos nas três escalas |
-| Provas, somatórios e probabilidades auditadas | CONCLUÍDO; fundamentacao_matematica.md e 105 verificações independentes em revisao_matematica.txt |
-| Dez análises com tempo, espaço e hipóteses | CONCLUÍDO; dez seções em analise_teorica.md |
-| Exatamente duas estratégias implementadas | CONCLUÍDO; src/heap.c e src/bitmap.c; oráculo apenas em tests |
-| Contratos, ordem e compactação | CONCLUÍDO; dedup.h, código e testes |
-| Heap iterativo sem heap dinâmico ou recursão | CONCLUÍDO; fonte, nm, desmontagem e frames static |
-| Embarca ≤256 B extras independente de n | CONCLUÍDO no build local: 96 B conservadores; refazer em novo alvo |
-| Datacenter <2 s em n=10⁷ | CONCLUÍDO localmente; PENDENTE na máquina de referência |
-| Casos vazios, unitário, iguais, distintos, ordenados, reversos, intercalados, extremos, pequenos | CONCLUÍDO; tests/test.c e dados/testes.txt |
-| Corretude nas três escalas e comparação exata de conjuntos/ordem | CONCLUÍDO; 222 casos/algoritmo e validação em cada rodada |
-| Compilação e análise de erros de memória | CONCLUÍDO; GCC sem avisos, ASan/UBSan em dados/sanitizers.txt |
-| Benchmark com aquecimento, sete rodadas e dispersão | CONCLUÍDO; CSV bruto 42 linhas e resumo seis linhas |
-| Hardware, SO, compilador, flags, semente e distribuição | CONCLUÍDO; ambiente.json e CSV |
-| Separar algoritmo, entrada e processo; pilha, heap e disco | CONCLUÍDO; metodologia, memória e dois painéis gráficos |
-| Oito extrapolações no gráfico com duas medições | CONCLUÍDO; tempo.png e previsoes_log10.csv |
-| Constantes, hipóteses e incerteza explícitas | CONCLUÍDO; modelos.md |
-| Fatoriais/exponenciais sem overflow ou sumiço | CONCLUÍDO; lgamma e CSV log₁₀, painel de faixa completa |
-| Cálculos das quatro estratégias exageradas | CONCLUÍDO; exemplos numéricos e cenários especiais |
-| Corrigir unário, power set, Bogosort repetido e Bloom | CONCLUÍDO; análise e modelos |
-| Relatório PDF e fonte editável | CONCLUÍDO; relatorio.pdf e docs/relatorio.md |
-| Código, automação, dependências, README, gráficos e ZIP | CONCLUÍDO na entrega; roteiro de reprodução no README |
-| Aprovação prévia do par pelo professor | PENDENTE; não foi informada |
-| Confirmação de linguagem C | PENDENTE; divergência textual com Pascal |
-| Integrantes | Henry Rodrigues, Rafael Maluf e Matheus |
-| Bloom empírico ≤1% | NÃO SE APLICA; Bloom só analisado, soluções exatas |
+Versão examinada inicialmente: acb938d. Referência: PDF «PjBL: Duas Empresas, Duas Restrições — Deduplicação de Leituras de Sensores», lido integralmente. A auditoria confrontou fontes C, scripts, somatórios, probabilidades, CSVs, gráficos e relatório. Os estados de atendimento ao enunciado estão em docs/checklist.md. A existência de um texto explicativo não foi considerada evidência de execução.
 
-## Revisão pelos seis critérios da rubrica
+## Erros e insuficiências encontrados
 
-| Critério | Peso | Material para revisão e limite |
+| Item | Constatação na versão anterior | Correção e consequência |
 |---|---|---|
-| Análise das dez estratégias | 25% | analise_teorica.md; inclui deduções, hipóteses, domínio limitado e recursos separados |
-| Justificativa do par | 10% | seção Escolha e contrato, comparação com as outras oito; aprovação pendente |
-| Implementação e instrumentação em Pascal | 20% | fontes C, testes, frames, desmontagem e sanitizadores; C precisa ser aceito pelo professor |
-| Dados e coerência teoria/prática | 20% | 42 medições, seis resumos, gráficos e discussão; máquina da referência pendente |
-| Estratégias exageradas e extrapolação | 15% | quatro cálculos explícitos, oito curvas e custos hipotéticos auditáveis |
-| Relatório, recomendação e comunicação | 10% | PDF completo, fontes editáveis, recomendações por cliente e roteiro oral |
+| Modelo de Bloom | O tempo cobrava zerar 78586 B em todo n, mas a RAM dimensionava um filtro variável por E[u] | Adotado filtro fixo de 78586 B para D distintos em ambos os recursos; RAM nominal total 78714 B, incluindo 128 B de trabalho. Curva de RAM regenerada; a dedução do dimensionamento não mudou |
+| RAM de subconjuntos | A figura rotulada pilha + heap mostrava só payload n2ⁿ B, embora o texto apontasse descritores e pilha | Curva soma payload, descritores nominais de 16 B por subconjunto, pilha nominal de 16(n+1) B e 128 B de trabalho. O payload mínimo continua identificado separadamente; não se trata de memória medida |
+| Esperanças e substituições | As curvas por E[u] podiam ser lidas como E[T], apesar de funções não lineares e da fase de formação do conjunto | Documentada a distinção: log(E[u]+1) não é E[log(u+1)]; nu/2 é aproximação de posição média, não a esperança exata de toda a força bruta |
+| Entrada da demonstração | A combinação de strtoull com teste apenas do primeiro caractere aceitava ` -18446744073709551615` como n=1 | Falha reproduzida: retorno 0 e CSV na versão anterior; agora retorno 1 e nenhuma rodada. Exigidos tokens decimais sem sinal/espaços e verificado errno também nas repetições |
+| Verificação da entrega | O verificador não conferia Q1/Q3, unicidade dos seis grupos, rodadas 0–6, frames dos .su contra o resumo, tabela do relatório ou proveniência dos gráficos | Esses vínculos são verificados; manifesto associa hashes dos dados/modelos às figuras e registra os pontos medidos plotados. Cálculos combinatórios independentes complementam a comparação do modelo com seu próprio CSV |
+| Checklist | O contrato era atribuído ao cabeçalho dedup.h após a remoção de seus comentários; «concluído» misturava comprovação local e exigência externa | Evidência do contrato corrigida para README, análise e testes. Checklist passou a separar requisito, evidência e estado: atendido, parcial, ausente ou não verificável |
 
-A soma dos pesos é 100%. Não se estima nota: ela depende do professor e das pendências acima, especialmente linguagem e máquina de referência.
+Nenhum erro de deduplicação foi encontrado nas duas funções C. Não houve alteração de heap.c ou bitmap.c nesta auditoria. As afirmações de limite inferior de leitura, caso médio e pior tempo do Bogosort foram delimitadas com as hipóteses necessárias; elas não são garantias para toda entrada.
+
+## Rededução das dez estratégias
+
+A tabela resume o resultado da conferência; os argumentos completos permanecem em fundamentacao_matematica.md e analise_teorica.md. Expressões com Θ de tempo desconsideram n=0, salvo indicação contrária. n é o tamanho da entrada; u é a quantidade de distintos; D=65536; m é o número de bits do Bloom; k é o número de hashes; w=64. Uma implementação com memória em palavras não implica a mesma contagem em bits sob aritmética de precisão ilimitada.
+
+| Estratégia | Resultado da dedução e hipótese | Espaço extra e limite |
+|---|---|---|
+| Força bruta | Cmax=u(u−1)/2+(n−u)u; trabalho Θ(n+C). Melhor Θ(n); pior genérico Θ(n²) com D≥n; O(nD) com domínio limitado. Médio depende da distribuição | Pilha O(1), heap 0, disco 0; contadores de palavra fixa |
+| Ordenar e varrer | Heap: construção Θ(n), extrações O(n log n), compactação Θ(n). Melhor Θ(n) com iguais; médio de permutações de chaves distintas e pior genérico Θ(n log n) | Pilha constante sem recursão; heap/disco 0. 96 B conservadores no build local |
+| Hash | Esperado Θ(n) com dispersão e carga controladas; amortização cobre redimensionamentos. Colisões podem causar Θ(nu); não é garantia de Θ(n) | Heap O(u+1), inclusive folga e pico de redimensionamento; pilha O(1), disco 0 |
+| Árvore balanceada | Limite O(n log(u+1)+u); melhor Θ(n) com iguais; buscas uniformes entre u nós têm média Θ(log(u+1)); sem distribuição não há média única | Nós O(u+1) no heap; pilha O(log(u+1)) recursiva ou O(1) iterativa com pais; disco 0 |
+| Bitmap | Θ(n+ceil(D/w)) incluindo inicialização; com D fixo, Θ(n+1) | 8192 B de bits mais escalares na pilha; frame GCC 8208 B, mais margem 16 B; heap/disco 0 |
+| Bloom | Variante de k hashes sempre avaliados: Θ(nk+ceil(m/w)); p≈(1−exp(−ku/m))^k sob o modelo clássico aproximado | m bits no heap ou pilha, não ambos; escalares O(1); disco 0. Não oferece exatidão e um falso positivo pode perder um único |
+| Bogosort | Para multiplicidades cⱼ, E[tentativas]=n!/∏cⱼ!. Entrada inicialmente desordenada e embaralhamentos independentes: Θ(n/q); já ordenada Θ(n). Para q<1 não há teto finito do número de tentativas | Pilha/RNG O(1) em variante iterativa; heap/disco 0; o orçamento em bytes exigiria implementação |
+| Subconjuntos | Visitar 2ⁿ folhas sem copiar: Θ(2ⁿ) tempo; materializar elementos: Θ(n2ⁿ). Não se confunde contagem de subconjuntos com soma de seus tamanhos | Pilha Θ(n); streaming pode ter heap 0; materialização exige payload n2ⁿ B para uint16_t, mais descritores; disco 0 |
+| Unário | S=Σ(xⱼ+1). Serialização Θ(S). Deduplicador por varreduras completas: V=Σ(n−j+1)(xⱼ+1); E[V]=32768,5n(n+1)/2 se cada comprimento tem essa média. Com D fixo, tráfego Θ(n²) nesta variante | RAM de contadores/buffer O(1) hipotética; disco Θ(S), no máximo 65536n B no formato de um byte por símbolo. Exponencial em bits do valor, não em n para domínio fixo |
+| Matriz | Todas as n² comparações são exigidas pela auditoria de pares: Θ(n²) nos três casos | Heap n² B ou ceil(n²/8) B empacotados, mais escalares; pilha O(1); disco 0 na variante residente |
+
+Não há teto temporal numérico para Embarca no PDF. Rejeições por tempo para esse cliente são de viabilidade prática; para Datacenter, a meta formal é menor que 2 s na máquina da disciplina. Tampouco há teto de disco no enunciado: volumes unários gigantescos não demonstram uma violação formal de capacidade que não foi estipulada.
+
+## Contas quantitativas refeitas
+
+Em dados/calculos_quantitativos.csv estão as três escalas para as quatro estratégias exageradas, com unidades nos nomes dos campos. São cálculos de modelos, separados do CSV empírico.
+
+- Bogosort, n=1000 distinto: log₁₀(1000!)=2567,604644222; a 1 ns por elemento/tentativa, log₁₀(tempo em s)=2561,604644222. Para n>D, o cálculo usa multiplicidades balanceadas e divide os fatoriais; a soma independente de logaritmos confirma o resultado de lgamma.
+- Subconjuntos, n=1000: 2¹⁰⁰⁰≈1,071508607×10³⁰¹ folhas; payload 1000×2¹⁰⁰⁰≈1,071508607×10³⁰⁴ B; profundidade 1001 e pilha nominal de 16016 B. O modelo completo de RAM da curva adiciona descritores e trabalho. Streaming evita materializar, mas não elimina a explosão de tempo nem a pilha linear.
+- Unário, n=10⁷ uniforme em média: armazenamento esperado 327685000000 B, pior 655360000000 B; tráfego esperado 1638425163842500000 B. A 10⁹ B/s, só a gravação esperada custa 327,685 s e a varredura completa cerca de 1,638×10⁹ s. São tempos condicionais à taxa assumida, sem seeks ou CPU.
+- Matriz, n=10⁷: 10¹⁴ células, 100 TB em bytes ou 12,5 TB em bits (11,3687 TiB). A 1 ns/célula, 100000 s. Mesmo n=1000 exige 125000 B empacotados, acima de 256 B. Não se afirma um limite formal de memória para Datacenter, pois ele não foi dado.
+
+## Corretude, limites de índices e medição
+
+No sift, root<end/2 implica 2root+1<end e evita overflow do cálculo do filho sob um vetor válido; o filho direito só é lido se child+1<end. Laços decrescentes testam o limite antes de subtrair. Na compactação ordenada, n<2 retorna antes de acessar a[0]; o índice u−1 é válido porque u começa em 1. No bitmap, x>>6≤1023 e x&63≤63; o literal deslocado é uint64_t. Em ambos, a saída nunca escreve à frente da região já consumida. O contrato aceita NULL apenas com n=0.
+
+Os 3502 casos por algoritmo incluem 222 casos dirigidos/pseudoaleatórios e todas as 3280 sequências de comprimento 0 a 7 sobre {0,64,65535}. O histograma independente verifica cada valor, unicidade, contagem e ordem; sentinelas verificam as posições imediatamente antes/depois do vetor. As três escalas incluem vetores globalmente crescentes/decrescentes, também com repetições quando n>D; ciclos do domínio não foram considerados equivalentes a ordem global. AddressSanitizer e UndefinedBehaviorSanitizer passaram. Isso é evidência forte de corretude e complementa os invariantes; não é uma prova por enumeração de todo o domínio de entradas possíveis.
+
+O benchmark foi executado novamente após a correção da rotina principal. Houve um aquecimento e sete medições por combinação, seis combinações, com validação fora da janela. A inicialização das estruturas e a compactação ficaram dentro. Fonte e binário têm hashes no ambiente.json; não se preencheram tempos manualmente. Os dados anteriores foram preservados em dados/historico/pre_auditoria/. As medianas novas estão na tabela de resultados do relatório, junto de extremos e quartis.
+
+A auditoria dos .su e da desmontagem confirma o caminho heap_unique (48 B) → sift (32 B), sem recursão e sem chamadas de alocação, mais margem conservadora de 16 B: 96 B. Esse é um limite estático do binário GCC/x86-64, não pico obtido por RSS. O processo de testes inclui dois vetores, histograma e runtime, separados do algoritmo. A prova em outro compilador/ABI ou com interrupções exige nova avaliação.
+
+## Limites da auditoria e pendências
+
+A aprovação do par, a aceitação de C diante das menções a Pascal e o desempenho na máquina da disciplina não são verificáveis com os recursos disponíveis. O domínio, escalas, exatidão, memória extra do build local e execução real foram conferidos. O uso sem comentários no código segue a organização solicitada; as explicações estão nos documentos. Não equivale a confirmação de todos os níveis da rubrica pelo professor.
+
+As referências bibliográficas foram conferidas quanto à identificação presente no trabalho, mas o acesso aos seis endereços (MIT Press, dois DOIs, GCC, POSIX e Linux man-pages) falhou neste ambiente por recusa do túnel HTTP (403 Forbidden). dados/referencias_acesso.json registra a tentativa. A resolução atual dos links e a consulta integral às fontes externas não foram verificadas; a falha de acesso não demonstra inexistência da referência.
+
+Os índices, ponteiros e temporários que o compilador mantém em registradores não alocam RAM adicional. A desmontagem de heap.o não contém registradores vetoriais; mesmo contabilizando conservadoramente todos os 16 registradores gerais de 64 bits como armazenamento adicional, 96+16×8=224 B permanece abaixo de 256 B. Os 96 B apresentados nos resultados são o limite de RAM de pilha com margem, não essa contabilidade ampliada calculada.
+
+
+# Checklist de atendimento ao enunciado
+
+Atendido: evidência disponível e conferida. Parcial: parte demonstrada, com limitação explícita. Ausente: item exigido sem artefato. Não verificável: depende de informação ou acesso externo. Os estados se referem às evidências desta entrega e não atribuem nota.
+
+| Requisito do PDF | Evidência encontrada | Situação |
+|---|---|---|
+| §1–2: análise de tempo e espaço de dez estratégias | Dez seções em analise_teorica.md, provas e auditoria individual | Atendido |
+| §2: distinguir pilha de heap e outros recursos | Metodologia, .su, desmontagem, modelos e auditoria separam pilha, heap, entrada, processo e disco | Atendido |
+| §2: relacionar teoria e experimentos | CSV real, dispersão, duas curvas medidas e oito modelos com hipóteses | Atendido |
+| §2/§9: instrumentação em Pascal | Código e evidências em C; §6 permite escolha, objetivos/rubrica citam Pascal | Parcial |
+| §3: todos os integrantes conseguem explicar o trabalho | Roteiro e perguntas disponíveis; desempenho oral individual não observado | Não verificável |
+| §3/§4.3: aprovação prévia do par | Nenhum comprovante de aprovação fornecido | Não verificável |
+| §3: recomendação de C/Python | C para ambas e Python na automação; trata-se de recomendação, não obrigação | Atendido |
+| §4.1: inteiros de 16 bits, 0–65535 | uint16_t; geração e testes de extremos e domínio completo | Atendido |
+| §4.1: n=1000,100000,10000000 | 42 rodadas medidas e testes nas três escalas; 7 rodadas por algoritmo/n | Atendido |
+| §4.1: Embarca com ≤256 B extras para todo n | Caminho estático do build local: 48+32+16=96 B, sem heap ou recursão; independente de n | Atendido |
+| §4.1/§8: Datacenter com n=10⁷ em <2 s na referência | Medições locais abaixo de 2 s; máquina da disciplina indisponível | Parcial |
+| §4.1: exatidão | Invariantes e 3502 casos por algoritmo confrontados com histograma independente | Atendido |
+| §4.1/§6: falso positivo ≤1% para solução probabilística | Não se aplica às duas soluções exatas; Bloom é apenas análise | Atendido |
+| §4.2/§4.3: melhor, médio, pior e hipóteses | Deduções individuais; média não definida sem distribuição; O separado de Θ | Atendido |
+| §4.2/§4.3: adequação de cada estratégia aos dois clientes | Análise e auditoria com memória e tempo prático/formal separados | Atendido |
+| §4.3: exatamente duas estratégias implementadas | heap.c e bitmap.c; histograma exclusivo de testes; outras oito só modeladas | Atendido |
+| §4.3: justificar as duas escolhas | Comparação com força bruta, hash, árvore, Bloom e variantes de ordenação | Atendido |
+| §4.3: oito extrapolações no mesmo gráfico das medidas | tempo.png/PDF: dez legendas; painel completo mantém expoentes astronômicos | Atendido |
+| §5: quatro rejeições quantitativas | Exemplos no relatório e calculos_quantitativos.csv nas três escalas | Atendido |
+| §5: cenários pequenos/especiais e restrições violadas | Análise distingue entrada ordenada, iguais, n pequeno e ausência de teto formal de disco/tempo Embarca | Atendido |
+| §6: linguagem à escolha | Implementações em C; confirmação da divergência com Pascal depende do professor | Parcial |
+| §6: demonstração dos dois algoritmos nas três escalas | make bench executa seis combinações; main imprime segundos e RSS; coletor exibe medianas e grava memória do algoritmo | Atendido |
+| §6/§8: vazio e sem duplicatas sem erro | NULL/0, n=0 nos testes, unitário, 65536 valores distintos crescentes/decrescentes | Atendido |
+| §7: estrutura src, docs, dados e relatorio.pdf | Arquivos presentes e validados | Atendido |
+| §7: ZIP ou Git | Ambos produzidos; manifesto SHA-256 confere o ZIP | Atendido |
+| §8: pequenos n≤10 com e sem duplicatas | Sete exemplos manuais e grade exaustiva 0–7, com validação independente | Atendido |
+| §8: memória instrumentada por n | Frames static GCC usados para limite válido para todos os n, mais observação de RSS por rodada | Atendido |
+| §8: coerência gráfica | CSVs, quartis, manifesto gráfico, tabelas e fontes do PDF conferidos; inspeção visual | Atendido |
+| §9: relatório/recomendação | PDF e fonte editável, recomendação por cliente e limitações explícitas | Atendido |
+| §10: decisões documentadas e dúvidas levadas ao professor | Decisões documentadas; consulta ao professor não comprovada | Parcial |
+| Reprodutibilidade complementar | Makefile, dependências, README, logs e hashes da coleta | Atendido |
+
+## Conferência dos seis critérios da rubrica
+
+| Critério | Peso | Evidência e limitação | Situação |
+|---|---|---|---|
+| Análise das dez estratégias | 25% | Deduções, casos, hipóteses, recursos e comparação dos clientes | Atendido |
+| Justificativa do par | 10% | Decisões técnicas fundamentadas; aprovação externa não demonstrada | Parcial |
+| Implementação e instrumentação em Pascal | 20% | Duas soluções em C compiladas/testadas, .su e desmontagem; linguagem depende de confirmação, código sem comentários conforme solicitação | Parcial |
+| Dados e coerência teoria/prática | 20% | Medições reais e modelos explícitos; máquina da referência não acessível | Parcial |
+| Estratégias exageradas e extrapolação | 15% | Contas das quatro, modelos das oito e cenários especiais | Atendido |
+| Relatório, recomendação e comunicação | 10% | PDF, fontes, apresentação e recomendações; defesa oral não avaliada | Parcial |
+
+Pesos somam 100%. Nenhum artefato obrigatório de entrega foi identificado como ausente após as correções. Isso não elimina as pendências externas nem garante nota, aprovação de linguagem ou cumprimento do prazo na máquina da disciplina.
 
 
 # Roteiro de apresentação e defesa oral
