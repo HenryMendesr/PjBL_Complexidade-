@@ -1,6 +1,6 @@
 # Contas e raciocínio do trabalho
 
-Este material explica como chegar aos resultados, para que os integrantes consigam refazer as contas e defendê-las. A análise que faz parte da entrega permanece em [analise_teorica.md](../projeto/docs/analise_teorica.md). Para preparar a fala, use [apresentacao.md](apresentacao.md).
+Este material explica como chegar aos resultados, para que os integrantes consigam refazer as contas e defendê-las. A análise que faz parte da entrega permanece em [analise_teorica.md](../projeto/docs/analise_teorica.md). 
 
 ## 1. O que estamos contando?
 
