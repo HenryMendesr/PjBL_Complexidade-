@@ -18,6 +18,14 @@ from reportlab.pdfbase.ttfonts import TTFont
 R=Path(__file__).resolve().parents[1]
 rows=json.loads((R/'dados/resumo.json').read_text())
 env=json.loads((R/'dados/ambiente.json').read_text())
+memory_env=json.loads((R/'dados/memoria.json').read_text())
+memory=memory_env['resultados']
+assert len(memory)==6 and {(m['algoritmo'],m['n']) for m in memory}=={(alg,n) for alg in ['heap','bitmap'] for n in [1000,100000,10000000]}
+assert memory_env['fontes_sha256']==env['fontes_sha256']
+assert memory_env['seed']==env['seed'] and memory_env['gerador']==env['gerador']
+for m in memory:
+    expected=next(r for r in rows if r['algoritmo']==m['algoritmo'] and r['n']==m['n'])
+    assert m['u']==expected['u'] and m['entrada_bytes']==expected['entrada_bytes']
 ns=np.unique(np.rint(np.logspace(3,7,101)).astype(int))
 mt=np.array([models(int(n))[0] for n in ns])
 mm=np.array([models(int(n))[1] for n in ns])
@@ -66,34 +74,59 @@ for j,name in enumerate(names):ax.plot(ns,mt[:,j],styles[j],color=colorset[j+2],
 measured(ax,True);ax.set_yscale('symlog',linthresh=10)
 ax.set_yticks([-6,0,6,100,10000,1000000,100000000],['−6','0','6','100','10 000','1 000 000','100 000 000'])
 finish(fig,ax,'tempo_completo','E é um expoente, não uma duração. Eixo comprimido para manter as oito curvas, inclusive fatoriais e exponenciais.')
-fig,ax=new('Memória auxiliar — modelos e amostra Python','Expoente E: memória = 10^E bytes')
+fig,ax=new('Memória das duas implementações Python','Pico de alocações rastreadas (bytes)')
+ax.set_yscale('log')
+for k,alg in enumerate(['heap','bitmap']):
+    group=sorted((m for m in memory if m['algoritmo']==alg),key=lambda m:m['n'])
+    ax.plot([m['n'] for m in group],[m['pico_alocacoes_rastreadas_bytes'] for m in group],'o-',color=colorset[k],markersize=9,label=alg+' — pico rastreado')
+    for m in group:
+        ax.annotate(str(m['pico_alocacoes_rastreadas_bytes'])+' B',(m['n'],m['pico_alocacoes_rastreadas_bytes']),xytext=(0,12),textcoords='offset points',ha='center',fontsize=12)
+ax.axhline(256,color='#555555',linestyle='--',label='Limite Embarca: 256 B')
+ax.set_ylim(bottom=128,top=max(m['pico_alocacoes_rastreadas_bytes'] for m in memory)*1.6)
+finish(fig,ax,'memoria_algoritmos','Uma execução completa rastreada por combinação. Entrada e validação fora do rastreamento; não é RAM total.')
+fig,ax=new('Memória comparativa — modelos e Python medido','Expoente E: memória = 10^E bytes')
 for j,name in enumerate(names):ax.plot(ns,mm[:,j],styles[j],color=colorset[j+2],label=name+' — modelo compacto')
 for k,alg in enumerate(['heap','bitmap']):
-    m=env['memoria'][alg]
-    ax.scatter([m['n_medido']],[lg(m['pico_alocacoes_rastreadas_bytes'])],s=115,color=colorset[k],label=alg+' — tracemalloc',zorder=5)
+    group=sorted((m for m in memory if m['algoritmo']==alg),key=lambda m:m['n'])
+    ax.plot([m['n'] for m in group],[lg(m['pico_alocacoes_rastreadas_bytes']) for m in group],'o-',color=colorset[k],label=alg+' — tracemalloc',zorder=5)
 ax.axhline(lg(256),color='#555555',label='Limite Embarca: 256 B')
 ax.set_yscale('symlog',linthresh=10);ax.set_ylim(bottom=0)
 ax.set_yticks([0,2,4,10,1000,1000000],['0','2','4','10','1000','1 000 000'])
-finish(fig,ax,'memoria_algoritmos','Pontos Python medidos somente em n=1000. Modelos compactos não representam objetos do interpretador.')
+finish(fig,ax,'memoria_comparativa','Seis amostras Python reais. Modelos compactos não representam objetos do interpretador; não são memória medida.')
 fig,ax=new('Entrada, armazenamento em disco e processo','Bytes')
 ax.set_yscale('log')
 ax.plot(ns,ns*2,label='Entrada array: 2n B')
 ax.plot(ns,ns*32768.5,'--',label='Unário: disco esperado')
-ax.scatter([10000000],[env['rss_pico_processo_kib']*1024],s=100,label='RSS máximo da coleta')
+ax.scatter([10000000],[env['rss_pico_processo_kib']*1024],s=100,label='RSS máximo: coleta de tempo')
 finish(fig,ax,'armazenamento','RSS: processo completo, incluindo infraestrutura. Não é memória extra de uma função.')
 result='# Metodologia e resultados Python\n\n'
 result+='Um aquecimento e três rodadas por combinação. perf_counter_ns mede apenas a chamada ao algoritmo; geração, cópia, validação e impressão ficam fora. Inicializar o bitmap fica dentro. Mesmos dados para ambos: random.Random(20261108).getrandbits(16), reiniciado por escala. Não é geração criptográfica. Validação independente por set, contagem, unicidade e ordem ocorre depois de toda rodada.\n\n'
 result+='Ambiente: '+env['python'].splitlines()[0]+'. '+env['sistema']+'. '+env['cpu_info']+'.\n\n'
 result+='| Algoritmo | n | u | Mediana (s) | Mínimo (s) | Máximo (s) |\n|---|---|---|---|---|---|\n'
 for r in rows:result+=f"| {r['algoritmo']} | {r['n']} | {r['u']} | {r['mediana_s']:.6f} | {r['min_s']:.6f} | {r['max_s']:.6f} |\n"
-result+='\nA memória foi amostrada em rodada separada com tracemalloc, somente para n=1000, com a entrada criada antes do rastreamento e após gc.collect. O pico indica alocações rastreadas; não soma toda a memória interna do interpretador e não prova um limite universal para n. Nenhum tempo foi medido com tracemalloc ativo.\n\n'
-for alg in ['heap','bitmap']:result+=f"- {alg}: pico rastreado em n=1000 de {env['memoria'][alg]['pico_alocacoes_rastreadas_bytes']} B.\n"
-result+=f"\nA amostra de Heap Sort apresentou {env['memoria']['heap']['pico_alocacoes_rastreadas_bytes']} B rastreados: "+('ultrapassa os 256 B, portanto esta implementação não atende ao limite no ensaio.' if env['memoria']['heap']['pico_alocacoes_rastreadas_bytes']>256 else 'a amostra isolada não prova o limite para todos os n.')+' O requisito de 256 B da Embarca não está demonstrado em CPython. Não se reutiliza a prova da versão C nem se desconta a infraestrutura para inventar um limite. Há apenas uma amostra de alocações por função, não um estudo de memória nas três escalas; essa parte permanece parcial. O vetor ocupa 2n B; seu objeto possui cabeçalho e eventual folga que não estão incluídos nesses 2n B calculados. O RSS máximo pertence ao processo inteiro.\n\n'
+result+='\nA memória foi medida em uma execução completa separada por algoritmo e tamanho, nas três escalas, usando as mesmas entradas da coleta de tempo (mesmo gerador e semente). Cada combinação recebeu aquecimento pequeno e gc.collect antes do rastreamento. A entrada e o relógio foram preparados antes de iniciar tracemalloc; validar e escrever o registro ocorreu após encerrá-lo. Nenhum tempo rastreado substitui as medianas de desempenho acima. São seis amostras de pico, não intervalos de confiança nem prova de pior caso para qualquer distribuição.\n\n'
+result+='| Algoritmo | n | u | Pico rastreado (B) | Payload entrada (B) |\n|---|---|---|---|---|\n'
+for m in sorted(memory,key=lambda m:(m['n'],m['algoritmo'])):
+    result+=f"| {m['algoritmo']} | {m['n']} | {m['u']} | {m['pico_alocacoes_rastreadas_bytes']} | {m['entrada_bytes']} |\n"
+result+='\ntracemalloc rastreia alocações Python, mas não toda a memória interna ou a pilha nativa. Os frames do interpretador podem usar uma arena já reservada; pico de novas alocações não é uma medição completa desse espaço de execução. O vetor tem 2n B de payload, com cabeçalho e eventual folga separados. O RSS do gráfico de armazenamento é o máximo do processo da coleta de tempo, não o consumo isolado de uma função.\n\n'
+layout=memory_env.get('pilha_cpython',{})
+if 'frames' in layout:
+    result+='## Verificação separada da pilha do interpretador\n\n'
+    result+=f"No CPython 3.12 instalado, o layout foi calculado com base no cabeçalho interno pycore_frame.h, cujo hash está em memoria.json. O cabeçalho de cada frame ocupa {layout['cabecalho_frame_bytes']} B e cada slot ocupa {layout['ponteiro_bytes']} B. As funções não usam closures.\n\n"
+    result+='| Função | Slots locais | Slots de avaliação | Capacidade do frame calculada (B) |\n|---|---|---|---|\n'
+    for name,f in layout['frames'].items():
+        result+=f"| {name} | {f['locais_slots']} | {f['pilha_avaliacao_slots']} | {f['capacidade_bytes_calculada']} |\n"
+    result+=f"\nOs frames de heap_unique e sift coexistem durante a descida: a capacidade calculada é {layout['caminho_heap_unique_sift_bytes']} B, já acima de 256 B, antes dos objetos referenciados. Essa capacidade pode ser atendida por arena já reservada; não significa a mesma quantidade de novas alocações por chamada. Não se soma diretamente esse valor aos picos de tracemalloc. O cálculo vale para o layout e fontes registrados, não para qualquer versão de Python.\n\n"
+else:
+    result+='A capacidade dos frames não foi calculada automaticamente neste interpretador. Não há certificação de memória extra completa por tracemalloc.\n\n'
+heap_peaks=[m['pico_alocacoes_rastreadas_bytes'] for m in memory if m['algoritmo']=='heap']
+result+=('O Heap Sort excedeu os 256 B nas amostras rastreadas, portanto não atende à restrição Embarca nesta versão. ' if max(heap_peaks)>256 else 'As amostras rastreadas não comprovam a memória extra total nem certificam o limite Embarca. ')
+result+='A equipe confirmou manter todos os códigos em Python. A técnica de Heap Sort continua com pouco espaço auxiliar no modelo teórico, mas essa propriedade não dá a esta implementação CPython uma garantia física de 256 B. A confirmação do professor sobre a linguagem não altera automaticamente o limite de memória do enunciado.\n\n'
 big=next(r for r in rows if r['n']==10000000 and r['algoritmo']=='bitmap')
 result+=f"O bitmap levou {big['mediana_s']:.6f} s de mediana local em n=10⁷. "+('A mediana ficou abaixo de 2 s localmente; isso não certifica a máquina da disciplina.' if big['mediana_s']<2 else 'A mediana local excedeu 2 s: o alvo temporal também não foi atingido nesta coleta. Não se substitui a medição por estimativa.')+'\n\n'
 result+='Recomendação: bitmap para Datacenter pelo domínio conhecido e custo linear, sujeito ao hardware da disciplina. Heap Sort demonstra ordenação/compactação sem vetor auxiliar, mas esta versão Python não é certificada para a Embarca. Permanecem necessárias confirmação da linguagem e aprovação do par.\n'
 source=(R/'docs/analise_teorica.md').read_text()+'\n\n'+result
-for name in ['tempo_medido','tempo_comparativo','tempo_completo','memoria_algoritmos','armazenamento']:source+=f'\n\n![{name}](graficos/{name}.png)\n'
+for name in ['tempo_medido','tempo_comparativo','tempo_completo','memoria_algoritmos','memoria_comparativa','armazenamento']:source+=f'\n\n![{name}](graficos/{name}.png)\n'
 (R/'docs/relatorio.md').write_text(source)
 
 font='/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'

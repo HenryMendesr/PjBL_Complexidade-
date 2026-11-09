@@ -6,7 +6,7 @@ Integrantes: Henry Rodrigues, Rafael Maluf e Matheus.
 
 O domínio tem D=65536 valores (0 a 65535). n é a quantidade de leituras e u a quantidade de distintos: 0≤u≤min(n,D). Se n>D, necessariamente existem repetições, mas não necessariamente todos os D valores. A entrada é array('H'), de 2 bytes por elemento na máquina avaliada. As funções modificam a entrada e retornam u; apenas a[0:u] é a saída válida. Heap devolve ordem crescente; bitmap mantém primeiras ocorrências. A entrada vazia retorna zero. São exatamente duas estratégias implementadas; conjuntos e ordenação nativa aparecem somente na infraestrutura de validação.
 
-Embarca permite 256 bytes extras ao vetor já residente. Datacenter exige n=10⁷ em menos de 2 s na máquina da disciplina. Todos os programas desta versão foram migrados para Python conforme a escolha da equipe. O limite de memória não é comprovado pela notação O(1): CPython aloca objetos, iteradores e estruturas de execução. A implementação Python de Heap Sort deve ser tratada como demonstração acadêmica; o resultado da medição de alocações está na metodologia. A evidência da versão anterior em C não se aplica aqui. A seção 6 permite escolha da linguagem, mas os objetivos e a rubrica citam Pascal: permanece necessária confirmação do professor e aprovação do par.
+Embarca permite 256 bytes extras ao vetor já residente, incluindo a pilha das funções. Datacenter exige n=10⁷ em menos de 2 s na máquina da disciplina. Todos os programas desta versão foram migrados para Python conforme a escolha da equipe. O limite de memória não é comprovado pela notação O(1): CPython aloca objetos, iteradores e estruturas de execução. A implementação Python de Heap Sort deve ser tratada como demonstração acadêmica: a medição de n=1000 já apresentou 380 B rastreados, acima do teto. A metodologia inclui agora medições completas nas três escalas e uma verificação separada da capacidade dos frames do interpretador. A evidência da versão anterior em C não se aplica aqui. A seção 6 permite escolha da linguagem, mas os objetivos e a rubrica citam Pascal: permanece necessária confirmação do professor e aprovação do par.
 
 ## 1. Força bruta
 
@@ -64,7 +64,7 @@ As oito alternativas NÃO foram implementadas ou medidas. Modelamos c=10⁻⁹ s
 
 Os custos nominais de RAM em bytes são: força bruta/Bogosort/unário 128; hash 16E[u]+128; árvore 32E[u]+128; Bloom 78586+128; subconjuntos (n+16)2ⁿ+16(n+1)+128; matriz ceil(n²/8)+128. São modelos otimistas de representação compacta, NÃO layouts Python. Para estruturas astronômicas, endereços de 64 bits já não bastariam; só o payload mínimo prova inviabilidade. As curvas são cálculos hipotéticos, não previsões calibradas de Python. As medições reais se identificam por pontos e linhas contínuas; alternativas usam tracejado. Caches, SO, distribuição e interpretador afetam os tempos e não foram isolados por experimento causal.
 
-Cada figura está em um arquivo próprio: tempo_medido.png (somente as duas medidas), tempo_comparativo.png (faixa prática com oito modelos), tempo_completo.png (todos os expoentes), memoria_algoritmos.png e armazenamento.png. Nos painéis de expoentes, o eixo vertical é E em quantidade=10^E; uma escala simétrica comprime expoentes gigantes sem eliminá-los. A RAM Python foi amostrada com tracemalloc em n=1000, separadamente do tempo; não é uma curva medida em todas as escalas nem memória total do interpretador.
+Cada figura está em um arquivo próprio: tempo_medido.png (somente as duas medidas), tempo_comparativo.png (faixa prática com oito modelos), tempo_completo.png (todos os expoentes), memoria_algoritmos.png (picos reais nas três escalas), memoria_comparativa.png (modelos compactos e medições Python) e armazenamento.png. Nos painéis de expoentes, o eixo vertical é E em quantidade=10^E; uma escala simétrica comprime expoentes gigantes sem eliminá-los. As alocações Python foram medidas com tracemalloc em uma execução completa por algoritmo em cada uma das três escalas, separadamente dos tempos. Esses picos não incluem toda a memória interna ou a pilha nativa, nem constituem prova para todas as entradas. A capacidade calculada dos frames do CPython é uma evidência distinta de espaço de execução, que pode ser servido por arena já reservada.
 
 ## Referências
 
@@ -89,12 +89,31 @@ Ambiente: 3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]. Linux-6.18.57-x
 | heap | 10000000 | 65536 | 70.117608 | 67.930714 | 72.476764 |
 | bitmap | 10000000 | 65536 | 1.041611 | 0.973067 | 1.057751 |
 
-A memória foi amostrada em rodada separada com tracemalloc, somente para n=1000, com a entrada criada antes do rastreamento e após gc.collect. O pico indica alocações rastreadas; não soma toda a memória interna do interpretador e não prova um limite universal para n. Nenhum tempo foi medido com tracemalloc ativo.
+A memória foi medida em uma execução completa separada por algoritmo e tamanho, nas três escalas, usando as mesmas entradas da coleta de tempo (mesmo gerador e semente). Cada combinação recebeu aquecimento pequeno e gc.collect antes do rastreamento. A entrada e o relógio foram preparados antes de iniciar tracemalloc; validar e escrever o registro ocorreu após encerrá-lo. Nenhum tempo rastreado substitui as medianas de desempenho acima. São seis amostras de pico, não intervalos de confiança nem prova de pior caso para qualquer distribuição.
 
-- heap: pico rastreado em n=1000 de 380 B.
-- bitmap: pico rastreado em n=1000 de 8553 B.
+| Algoritmo | n | u | Pico rastreado (B) | Payload entrada (B) |
+|---|---|---|---|---|
+| bitmap | 1000 | 996 | 8553 | 2000 |
+| heap | 1000 | 996 | 380 | 2000 |
+| bitmap | 100000 | 51281 | 8553 | 200000 |
+| heap | 100000 | 51281 | 380 | 200000 |
+| bitmap | 10000000 | 65536 | 8553 | 20000000 |
+| heap | 10000000 | 65536 | 380 | 20000000 |
 
-A amostra de Heap Sort apresentou 380 B rastreados: ultrapassa os 256 B, portanto esta implementação não atende ao limite no ensaio. O requisito de 256 B da Embarca não está demonstrado em CPython. Não se reutiliza a prova da versão C nem se desconta a infraestrutura para inventar um limite. Há apenas uma amostra de alocações por função, não um estudo de memória nas três escalas; essa parte permanece parcial. O vetor ocupa 2n B; seu objeto possui cabeçalho e eventual folga que não estão incluídos nesses 2n B calculados. O RSS máximo pertence ao processo inteiro.
+tracemalloc rastreia alocações Python, mas não toda a memória interna ou a pilha nativa. Os frames do interpretador podem usar uma arena já reservada; pico de novas alocações não é uma medição completa desse espaço de execução. O vetor tem 2n B de payload, com cabeçalho e eventual folga separados. O RSS do gráfico de armazenamento é o máximo do processo da coleta de tempo, não o consumo isolado de uma função.
+
+## Verificação separada da pilha do interpretador
+
+No CPython 3.12 instalado, o layout foi calculado com base no cabeçalho interno pycore_frame.h, cujo hash está em memoria.json. O cabeçalho de cada frame ocupa 72 B e cada slot ocupa 8 B. As funções não usam closures.
+
+| Função | Slots locais | Slots de avaliação | Capacidade do frame calculada (B) |
+|---|---|---|---|
+| heap_unique | 6 | 6 | 168 |
+| sift | 5 | 4 | 144 |
+
+Os frames de heap_unique e sift coexistem durante a descida: a capacidade calculada é 312 B, já acima de 256 B, antes dos objetos referenciados. Essa capacidade pode ser atendida por arena já reservada; não significa a mesma quantidade de novas alocações por chamada. Não se soma diretamente esse valor aos picos de tracemalloc. O cálculo vale para o layout e fontes registrados, não para qualquer versão de Python.
+
+O Heap Sort excedeu os 256 B nas amostras rastreadas, portanto não atende à restrição Embarca nesta versão. A equipe confirmou manter todos os códigos em Python. A técnica de Heap Sort continua com pouco espaço auxiliar no modelo teórico, mas essa propriedade não dá a esta implementação CPython uma garantia física de 256 B. A confirmação do professor sobre a linguagem não altera automaticamente o limite de memória do enunciado.
 
 O bitmap levou 1.041611 s de mediana local em n=10⁷. A mediana ficou abaixo de 2 s localmente; isso não certifica a máquina da disciplina.
 
@@ -111,6 +130,9 @@ Recomendação: bitmap para Datacenter pelo domínio conhecido e custo linear, s
 
 
 ![memoria_algoritmos](graficos/memoria_algoritmos.png)
+
+
+![memoria_comparativa](graficos/memoria_comparativa.png)
 
 
 ![armazenamento](graficos/armazenamento.png)

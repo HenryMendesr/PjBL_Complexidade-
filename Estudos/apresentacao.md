@@ -16,7 +16,7 @@ python3 projeto/src/main.py bitmap 3 1 3 0 65535
 python3 projeto/tests/test.py
 ```
 
-Deixar abertos o relatório, os cinco gráficos e os arquivos heap.py e bitmap.py. Os testes pequenos são rápidos; **não executar a coleta inteira durante a apresentação**, a menos que haja tempo reservado. No computador usado na coleta, cada rodada de Heap Sort com dez milhões de leituras levou cerca de 70 segundos, e a coleta faz aquecimento mais três rodadas por combinação.
+Deixar abertos o relatório, os seis gráficos e os arquivos heap.py e bitmap.py. Os testes pequenos são rápidos; **não executar a coleta inteira durante a apresentação**, a menos que haja tempo reservado. No computador usado na coleta, cada rodada de Heap Sort com dez milhões de leituras levou cerca de 70 segundos, e a coleta de tempo faz aquecimento mais três rodadas por combinação. O coletor também realiza rodadas separadas de memória: a última do heap levou cerca de 15 minutos com tracemalloc ativo. Isso não substitui o tempo de desempenho de aproximadamente 70 s.
 
 Preparar a explicação a partir dos [dados reais](../projeto/dados/resumo.json). Se houver uma nova coleta, atualizar as falas numéricas a partir desse arquivo. Os valores deste roteiro correspondem à coleta Python atualmente entregue.
 
@@ -194,9 +194,9 @@ Não ler E=1000 como mil segundos. Não afirmar que uma alternativa Python teria
 
 ### Memória e armazenamento
 
-Abrir [memoria_algoritmos.png](../projeto/graficos/memoria_algoritmos.png) e [armazenamento.png](../projeto/graficos/armazenamento.png).
+Abrir [memoria_algoritmos.png](../projeto/graficos/memoria_algoritmos.png), que mostra só as medições reais nas três escalas. A comparação com modelos compactos está em [memoria_comparativa.png](../projeto/graficos/memoria_comparativa.png); entrada, disco e processo estão em [armazenamento.png](../projeto/graficos/armazenamento.png).
 
-> A memória Python foi amostrada separadamente com tracemalloc, apenas para n=1000, para não misturar o custo do rastreamento ao tempo. Heap apresentou 380 B rastreados e bitmap 8553 B. A amostra do heap já ultrapassa os 256 B; portanto a restrição Embarca não foi atendida neste ensaio. Não temos uma curva empírica de memória nas três escalas nem uma contagem completa da memória interna do interpretador.
+> A memória Python foi medida separadamente com tracemalloc nas três escalas, em uma execução completa por algoritmo e tamanho, sem usar a duração rastreada como tempo de desempenho. Em n=1000, heap apresentou 380 B rastreados e bitmap 8553 B; os seis registros estão na tabela do relatório e em memoria.json. A amostra do heap já ultrapassa os 256 B. Ter três escalas medidas não representa uma contagem completa da memória do interpretador nem prova todas as entradas.
 
 Fazer a conta pequena: 380−256=124 B acima do teto. O vetor de dez milhões ocupa 2n=20000000 B de payload, aproximadamente 19,07 MiB; ele é a entrada, separada dos extras. RSS é o pico do processo inteiro, com infraestrutura, não o consumo isolado do algoritmo.
 
@@ -279,7 +279,7 @@ Encerrar com a recomendação e as evidências, não com «todos os requisitos f
 
 **Por que os modelos de hash/árvore podem parecer rápidos perto do Python medido?** Os custos dos modelos são nominais e otimistas, de representação compacta; não são benchmarks dessas alternativas em CPython. O gráfico não autoriza prometer esses segundos numa implementação futura.
 
-**Os 380 B incluem o vetor?** O vetor foi criado antes de iniciar o rastreamento da rodada de memória. O pico registra alocações rastreadas durante a função e não representa toda a memória interna do interpretador. É uma amostra em n=1000, separada do tempo. Não podemos extrapolá-la como medição completa em todas as escalas.
+**Os 380 B incluem o vetor?** O vetor foi criado antes de iniciar o rastreamento da rodada de memória. O pico registra alocações rastreadas durante a função e não representa toda a memória interna do interpretador. Há uma execução completa rastreada em cada uma das três escalas, separada dos tempos. Ainda não é uma contagem de toda a RAM ou de toda a pilha. A capacidade dos frames foi calculada separadamente para o CPython instalado e não deve ser somada diretamente ao pico rastreado.
 
 **A mediana de 1,04 s comprova o prazo?** Comprova esse resultado local na coleta apresentada. O enunciado pede a máquina da disciplina; a confirmação formal continua pendente.
 
@@ -295,3 +295,15 @@ Cada integrante deve conseguir, sem ler uma resposta pronta:
 6. Demonstrar as duas funções e explicar a região a[0:u].
 
 Usar a [Checklist](Checklist.md) para conferir a situação da entrega e [Matematica.md](Matematica.md) para revisar os passos das contas.
+
+## Como responder à crítica dos 256 bytes
+
+**Fala sugerida:**
+
+> A revisão está correta: nossa versão Python não cumpre os 256 bytes e nós não devemos anunciá-la como pronta para Embarca. Corrigimos a cobertura da coleta de memória, executando as duas funções completas nas três escalas. Além do pico rastreado, verificamos separadamente o espaço dos frames do CPython. A equipe optou por manter Python, então a limitação permanece registrada em vez de ser escondida ou dispensada por conta própria.
+
+Se o professor pedir a conta da pilha, mostrar 72+8×(6+6)=168 B para heap_unique e 72+8×(5+4)=144 B para sift. Como ficam ativos juntos, somam 312 B de capacidade no layout do interpretador usado. Não são frames de uma versão C anterior nem um número de RSS. O cálculo não inclui todos os objetos ou toda a pilha nativa e não deve ser somado diretamente aos 380 B de tracemalloc.
+
+Se perguntarem se «o algoritmo está errado», separar corretude e adequação: os testes e invariantes sustentam a deduplicação exata, mas uma solução correta pode descumprir um orçamento de memória. Se perguntarem se «o professor aceitar Python resolve», explicar que aprovação da linguagem e cumprimento do limite são requisitos diferentes. Uma dispensa de requisito precisaria ser explicitamente dada pelo professor; não existe tal confirmação nesta entrega.
+
+O resultado de 1,04 s do bitmap também deve ser apresentado como mediana local. A frase «cumpre a meta na máquina testada» descreve a coleta; a frase «cumpre a exigência da disciplina» dependeria da máquina de referência.

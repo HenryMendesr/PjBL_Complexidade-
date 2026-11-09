@@ -13,17 +13,6 @@
     "main.py": "043be1fbbe5eed24866950447a1e448ecc062880593772b6ec09819c64045e66",
     "heap.py": "5d8b727c644941d0d62ba3ba55fd129f8efd9971e85affa17d88438a392c0fe8"
   },
-  "memoria": {
-    "heap": {
-      "pico_alocacoes_rastreadas_bytes": 380,
-      "n_medido": 1000,
-      "metodo": "tracemalloc; rodada separada dos tempos; entrada criada antes; não inclui toda a memória interna do interpretador"
-    },
-    "bitmap": {
-      "pico_alocacoes_rastreadas_bytes": 8553,
-      "n_medido": 1000,
-      "metodo": "tracemalloc; rodada separada dos tempos; entrada criada antes; não inclui toda a memória interna do interpretador"
-    }
-  },
-  "rss_pico_processo_kib": 78080
+  "rss_pico_processo_kib": 78080,
+  "memoria_arquivo": "memoria.json"
 }

@@ -240,7 +240,7 @@ Nesta entrada e máquina, 70,117607581/1,041610970≈67,32. Portanto o bitmap te
 
 O payload de entrada em n=10⁷ é 2n=20000000 B, aproximadamente 19,07 MiB. Cópias, set/dict de validação, objeto do array e interpretador pertencem à infraestrutura. O tempo da função exclui geração, cópia, validação e impressão, mas inclui inicializar o bitmap e compactar.
 
-A amostra tracemalloc foi separada do tempo e feita **somente em n=1000**: 380 B para heap e 8553 B para bitmap. Para heap, 380−256=124 B acima do teto, ou 48,4375% a mais. Essas são alocações rastreadas, não toda a memória interna do interpretador. A amostra já não atende ao limite; não se deve apresentar a solução Python como aprovada para Embarca. Também não se pode desenhar uma curva medida de memória para três escalas com um único ponto.
+A primeira amostra tracemalloc foi separada do tempo e feita em n=1000: 380 B para heap e 8553 B para bitmap. A coleta foi ampliada para uma execução completa de cada algoritmo nas três escalas; os seis registros estão em [memoria.json](../projeto/dados/memoria.json). Para heap, 380−256=124 B acima do teto, ou 48,4375% a mais. Essas são alocações rastreadas, não toda a memória interna do interpretador. A amostra já não atende ao limite; não se deve apresentar a solução Python como aprovada para Embarca. A curva atual usa os seis registros reais. Ter três tamanhos medidos não demonstra todos os casos possíveis nem um limite de RAM total.
 
 ## 14. O que significa o eixo E dos gráficos completos?
 
@@ -260,3 +260,32 @@ O eixo de expoentes é comprimido para mostrar curvas astronomicamente grandes s
 O bitmap é a recomendação técnica para Datacenter pelo domínio conhecido, exatidão e trabalho linear; a mediana local ficou abaixo de dois segundos. A confirmação formal depende da máquina da disciplina. Heap Sort mostra ordenação e compactação com poucos dados auxiliares, mas os 256 B não foram atendidos na amostra Python. A escolha da linguagem facilita a defesa da equipe, porém não elimina essa restrição.
 
 Aprovação do par, aceitação da linguagem diante das menções a Pascal e defesa oral dos integrantes são questões externas. Nenhuma conta ou teste local substitui essas confirmações.
+
+## Resultados da coleta ampliada de memória
+
+| n | Heap: pico rastreado (B) | Bitmap: pico rastreado (B) |
+|---|---|---|
+| 1000 | 380 | 8553 |
+| 100000 | 380 | 8553 |
+| 10000000 | 380 | 8553 |
+
+Cada ponto veio de uma execução completa, com entrada, relógio e validação fora do rastreamento. Os três tamanhos apresentarem o mesmo pico é uma observação dessas entradas e desse interpretador; não é uma prova para todo n e toda distribuição. É compatível com poucos temporários e nenhuma estrutura auxiliar proporcional a n. Constante em n ainda pode exceder 256 B.
+
+A duração da rodada instrumentada do heap em n=10⁷ foi cerca de 905 s; o custo do rastreamento não deve ser confundido com a mediana sem rastreamento de 70,117608 s. Os arquivos de tempo não foram alterados por essa coleta de memória.
+
+## 16. Pilha do Python: por que tracemalloc não é a conta completa?
+
+tracemalloc registra alocações rastreadas feitas durante uma janela. A função também ocupa espaço de execução nos frames do interpretador, que podem ser servidos por uma arena já reservada. Esse espaço pode não aparecer como nova alocação dentro da janela. Por isso reduzir o pico rastreado abaixo de 256 B, se isso fosse obtido, não bastaria para certificar a memória total incluindo a pilha.
+
+No CPython 3.12 instalado, o cabeçalho interno `pycore_frame.h` descreve um frame com cabeçalho de 72 B e slots de 8 B. O cálculo foi conferido contra o layout instalado, cujo hash está em memoria.json. As duas funções não possuem closures.
+
+| Função | Slots locais | Slots de avaliação | Conta da capacidade | Total |
+|---|---|---|---|---|
+| heap_unique | 6 | 6 | 72+8×(6+6) | 168 B |
+| sift | 5 | 4 | 72+8×(5+4) | 144 B |
+
+Durante uma descida, heap_unique continua ativo enquanto sift executa. Os dois frames coexistem: 168+144=312 B. Essa capacidade de armazenamento simultâneo já supera 256 B, antes dos objetos dos inteiros e de outros custos de execução. É uma conta do layout desta versão do CPython e destas funções; não é uma medição de RSS e não significa 312 B de novas alocações a cada chamada.
+
+Os 312 B calculados e os 380 B rastreados em n=1000 são evidências diferentes. Não somamos ambos para anunciar um suposto total de 692 B, porque os métodos não fornecem uma decomposição completa e sem sobreposição. Ambos mostram por que a versão atual não está certificada para Embarca, sem inventar uma conta exata da RAM total.
+
+O código de diagnóstico é Python e usa ctypes para calcular o alinhamento do layout e os atributos do objeto de código para contar slots. Isso serve apenas à instrumentação; as funções de deduplicação continuam simples e não importam ctypes. Em outras versões do interpretador ou quando o cabeçalho não está disponível, o cálculo deve ser tratado como não verificável automaticamente. A coleta de tracemalloc continua válida com suas limitações.

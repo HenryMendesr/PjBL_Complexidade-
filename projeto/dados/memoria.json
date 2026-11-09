@@ -1,0 +1,99 @@
+{
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "sistema": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "coleta_utc": "2026-11-09T13:55:30.142525+00:00",
+  "seed": 20261108,
+  "gerador": "random.Random(seed).getrandbits(16)",
+  "repeticoes_por_combinacao": 1,
+  "aquecimento": "mesma função em entrada pequena; gc.collect antes de cada rastreamento",
+  "metodo": "tracemalloc; execução completa separada dos tempos; entrada, relógio e validação preparados fora do rastreamento; não inclui toda a memória interna do interpretador",
+  "fontes_sha256": {
+    "bitmap.py": "6e674407a9dfeb537c5ee5171710c155e74648ceb6c0ad12a388b90594d72779",
+    "main.py": "043be1fbbe5eed24866950447a1e448ecc062880593772b6ec09819c64045e66",
+    "heap.py": "5d8b727c644941d0d62ba3ba55fd129f8efd9971e85affa17d88438a392c0fe8"
+  },
+  "resultados": [
+    {
+      "algoritmo": "bitmap",
+      "n": 1000,
+      "u": 996,
+      "pico_alocacoes_rastreadas_bytes": 8553,
+      "retido_apos_chamada_bytes": 136,
+      "segundos_rodada_instrumentada": 0.0012641319990507327,
+      "entrada_bytes": 2000,
+      "rss_pico_processo_kib": 14080
+    },
+    {
+      "algoritmo": "heap",
+      "n": 1000,
+      "u": 996,
+      "pico_alocacoes_rastreadas_bytes": 380,
+      "retido_apos_chamada_bytes": 88,
+      "segundos_rodada_instrumentada": 0.027708851001079893,
+      "entrada_bytes": 2000,
+      "rss_pico_processo_kib": 14080
+    },
+    {
+      "algoritmo": "bitmap",
+      "n": 100000,
+      "u": 51281,
+      "pico_alocacoes_rastreadas_bytes": 8553,
+      "retido_apos_chamada_bytes": 136,
+      "segundos_rodada_instrumentada": 0.11749707299895817,
+      "entrada_bytes": 200000,
+      "rss_pico_processo_kib": 26396
+    },
+    {
+      "algoritmo": "heap",
+      "n": 100000,
+      "u": 51281,
+      "pico_alocacoes_rastreadas_bytes": 380,
+      "retido_apos_chamada_bytes": 88,
+      "segundos_rodada_instrumentada": 6.16772697200031,
+      "entrada_bytes": 200000,
+      "rss_pico_processo_kib": 26396
+    },
+    {
+      "algoritmo": "bitmap",
+      "n": 10000000,
+      "u": 65536,
+      "pico_alocacoes_rastreadas_bytes": 8553,
+      "retido_apos_chamada_bytes": 136,
+      "segundos_rodada_instrumentada": 9.845764223000515,
+      "entrada_bytes": 20000000,
+      "rss_pico_processo_kib": 66468
+    },
+    {
+      "algoritmo": "heap",
+      "n": 10000000,
+      "u": 65536,
+      "pico_alocacoes_rastreadas_bytes": 380,
+      "retido_apos_chamada_bytes": 88,
+      "segundos_rodada_instrumentada": 905.2580331219997,
+      "entrada_bytes": 20000000,
+      "rss_pico_processo_kib": 74396
+    }
+  ],
+  "pilha_cpython": {
+    "estado": "calculado para o CPython instalado, não medido por tracemalloc",
+    "cabecalho_fonte": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/include/python3.12/internal/pycore_frame.h",
+    "cabecalho_sha256": "23d66ba6ef2936ecca96dc427be5e022712ae25c3f4b3df2abd2ca46b1ee5f39",
+    "ponteiro_bytes": 8,
+    "cabecalho_frame_bytes": 72,
+    "frames": {
+      "heap_unique": {
+        "locais_slots": 6,
+        "pilha_avaliacao_slots": 6,
+        "capacidade_bytes_calculada": 168
+      },
+      "sift": {
+        "locais_slots": 5,
+        "pilha_avaliacao_slots": 4,
+        "capacidade_bytes_calculada": 144
+      }
+    },
+    "caminho_heap_unique_sift_bytes": 312,
+    "limite": "capacidade simultânea dos frames, possivelmente servida de arena já reservada; não inclui objetos referenciados nem toda a pilha nativa; não somar diretamente ao pico de alocações"
+  },
+  "analise_frames_utc": "2026-11-09T14:11:29.522249+00:00"
+}
